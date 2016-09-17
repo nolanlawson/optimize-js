@@ -16,7 +16,7 @@ describe('main test suite', function () {
         var input = results[0]
         var expected = results[1]
         var actual = optimizeJs(input)
-        assert.equal(expected, actual)
+        assert.equal(actual, expected)
       })
     })
   })
