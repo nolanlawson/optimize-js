@@ -38,7 +38,8 @@
   ],
   "standard": {
     "ignore": [
-      "test/cases/**"
+      "test/cases/**",
+      "benchmarks/**"
     ]
   }
 }

@@ -10,15 +10,17 @@ benchmarks.forEach(function (benchmark) {
   var optimized = optimizeJs(unoptimized)
 
   var suite = new Benchmark.Suite()
-  suite.add(benchmark, function() {
+  suite.add(benchmark, function () {
+    /*eslint-disable no-eval */
     eval(unoptimized)
-  }).add(benchmark + ' w/ optimize-js', function() {
+  }).add(benchmark + ' w/ optimize-js', function () {
+    /*eslint-disable no-eval */
     eval(optimized)
-  }).on('cycle', function(event) {
+  }).on('cycle', function (event) {
     console.log(String(event.target))
   }).on('error', function (err) {
     console.log(err)
-  }).on('complete', function() {
+  }).on('complete', function () {
     console.log('Fastest is ' + this.filter('fastest').map('name'))
   }).run()
 })
