@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>optimize-js benchmark</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+button {
+  display: inline-block;
+  font-size: 16px;
+  padding: 10px;
+  margin: 5px;
+}
+body {
+  max-width: 600px;
+  margin: 20px auto;
+  font-family: Helvetica, Arial, "sans-serif";
+}
+</style>
+</head>
+<body>
+<h1>optimize-js benchmark</h1>
+<p>All tests are median of 99.</p>
+<div>
+  <button type=button onclick="loadScript('immutable.js', 99)">Immutable</button>
+  <button type=button onclick="loadScript('immutable.optimized.js', 99)">Immutable opt</button>
+  <button type=button onclick="loadScript('immutable.min.js', 99)">Immutable min</button>
+  <button type=button onclick="loadScript('immutable.min.optimized.js', 99)">Immutable min+opt</button>
+</div>
+<div>
+  <button type=button onclick="loadScript('pouchdb.js', 99)">PouchDB</button>
+  <button type=button onclick="loadScript('pouchdb.optimized.js', 25)">PouchDB opt</button>
+  <button type=button onclick="loadScript('pouchdb.min.js', 99)">PouchDB min</button>
+  <button type=button onclick="loadScript('pouchdb.min.optimized.js', 25)">PouchDB min+opt</button>
+</div>
+<div>
+  <button type=button onclick="loadScript('three.js', 99)">Three.js</button>
+  <button type=button onclick="loadScript('three.optimized.js', 99)">Three.js opt</button>
+  <button type=button onclick="loadScript('three.min.js', 99)">Three.js min</button>
+  <button type=button onclick="loadScript('three.min.optimized.js', 99)">Three.js min+opt</button>
+</div>
+<div>
+  <button type=button onclick="loadScript('jquery.js', 99)">jQuery</button>
+  <button type=button onclick="loadScript('three.optimized.js', 99)">jQuery opt</button>
+  <button type=button onclick="loadScript('three.min.js', 99)">jQuery min</button>
+  <button type=button onclick="loadScript('three.min.optimized.js', 99)">jQuery min+opt</button>
+</div>
+<div>
+<pre id=display></pre>
+<script>
+function loadScript(src, num) {
+  var times = []
+  window.__onDone = function (time) {
+    times.push(time)
+    if (--num > 0) {
+      load();
+    } else {
+      var median = times.sort(function (left, right) {
+        return left < right ? -1 : 1
+      })[~~(times.length / 2)];
+      display.innerHTML += median + 'ms\n'
+    }
+  }
+  function load() {
+    var script = document.createElement('script')
+    script.src = src + '?q=' + Math.random()
+    document.body.appendChild(script)
+  }
+  load()
+}
+</script>
+</body>
+</html>

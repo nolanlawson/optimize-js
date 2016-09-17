@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "standard && mocha test/test.js",
-    "benchmark": "node bin/benchmark.js"
+    "benchmark": "sh bin/benchmark.sh"
   },
   "bin": {
     "optimize-js": "lib/bin.js"
@@ -23,15 +23,15 @@
   },
   "devDependencies": {
     "assert": "^1.4.1",
-    "benchmark": "^2.1.1",
     "browserify": "13.1.0",
     "bundle-collapser": "1.2.1",
     "denodeify": "^1.2.1",
     "factor-bundle": "2.5.0",
+    "http-server": "^0.9.0",
     "mocha": "^3.0.2",
     "rimraf": "2.5.4",
     "standard": "^7.1.2",
-    "uglify-js": "2.7.0"
+    "uglify-js": "^2.7.0"
   },
   "files": [
     "lib"
