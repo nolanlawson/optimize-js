@@ -32,7 +32,7 @@ runIt((function (){}))
 Benchmark overview
 ----
 
-| Browser | Average speed boost using `optimize-js` |
+| Browser | Typical speed boost using `optimize-js` |
 | ---- | ----- |
 | Chrome 52 | 57.09% |
 | Edge 14 | 28.87% |
