@@ -97,6 +97,7 @@ Luckily, because the `'('` optimization for IIFEs is so well-established, we can
 parsing the entire JavaScript file in advance (a luxury the browser can't afford) and inserting parentheses in the cases where we _know_
 the function will be immediately executed (or where we have a good hunch). That's what `optimize-js` does.
 
+More details on the IIFE optimization can be found in [this discussion](https://github.com/mishoo/UglifyJS2/issues/886).
 
 FAQs
 ----
@@ -135,7 +136,7 @@ take gzip into account. To prove it, here are the gzipped sizes for the librarie
 
 ### Is `optimize-js` intended for library authors?
 
-Yes! If you are already shipping a bundled, minified version of your library, then there's no reason not to also 
+Sure! If you are already shipping a bundled, minified version of your library, then there's no reason not to also 
 apply `optimize-js` (assuming you benchmark it and it does indeed help!). However if your users ever apply an additional layer of minification (notably with Uglify), then the parenthesis-wrapping optimization will be undone.
 
 Ideally, `optimize-js` should be run _after_ Uglify, since Uglify strips extra parentheses and also [negates IIFEs by default](https://github.com/mishoo/UglifyJS2/issues/640).
@@ -163,6 +164,23 @@ guesses), it can be more judicious in applying the paren hack.
 
 ### Does this really work for every JavaScript engine?
 
-For JavaScriptCore (Safari), I'm not sure. For Chakra, it [actually does optimize](https://github.com/mishoo/UglifyJS2/issues/640#issuecomment-247792319) the Uglify-style `!function(){}` format, but it's
-the only one I'm aware of that does that. `optimize-js` also optimizes some patterns that currently no JavaScript engine
-does the IIFE optimization for (e.g. `function(){}();`).
+Based on my tests, this optimization seems to work best for V8 (Chrome), followed by Chakra (Edge), followed by SpiderMonkey (Firefox). For JavaScriptCore (Safari) it seems to be basically a wash, or possibly a little worse than without. However, I still think `optimize-js` can be useful, because (in my experience) Safari is rarely a performance problem. Instead, most of your performance problems are likely to come from under-powered Android devices, meaning you want V8 to run as fast as possible.
+
+In the case of Chakra, [Uglify-style IIFEs are actually already optimized](https://github.com/mishoo/UglifyJS2/issues/640#issuecomment-247792319), but adding `optimize-js` doesn't hurt because a
+function preceded by `'('` still goes into the fast path.
+
+Contributing
+-----
+
+Build and run tests:
+
+```bash
+npm install
+npm test
+```
+
+Run the benchmarks:
+
+```bash
+npm run benchmark # then open localhost:9090 in a browser
+```
