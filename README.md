@@ -29,6 +29,18 @@ function runIt(fun){ fun() }
 runIt((function (){}))
 ```
 
+Benchmark overview
+----
+
+| Browser | Average speed boost using `optimize-js` |
+| ---- | ----- |
+| Chrome 52 | 57.09% |
+| Edge 14 | 28.87% |
+| Firefox 48 | 12.48% |
+| Safari 10 | 6.51% |
+
+For benchmark details, see [benchmarks](#benchmarks).
+
 CLI
 ----
 
@@ -61,18 +73,6 @@ var output = optimizeJs(input, {
   sourceMap: true
 }); // now the output has source maps
 ```
-
-Benchmark overview
-----
-
-| Browser | Average speed boost using `optimize-js` |
-| ---- | ----- |
-| Chrome 52 | 57.09% |
-| Edge 14 | 28.87% |
-| Firefox 48 | 12.48% |
-| Safari 10 | 6.51% |
-
-For benchmark details, see [benchmarks](#benchmarks).
 
 Why?
 ----
@@ -184,9 +184,9 @@ function preceded by `'('` still goes into the fast path.
 Benchmarks
 ----
 
-These tests were run using a handful of popular libraries, wrapped in `performance.now()` measures. Each test was the median of 251 runs. `optimize-js` commit [da51013](https://github.com/nolanlawson/optimize-js/commit/da51013) was tested. Minification was applied using `uglify -mc`, Uglify 2.7.0.
+These tests were run using a handful of popular libraries, wrapped in `performance.now()` measurements. Each test reported the median of 251 runs. `optimize-js` commit [da51013](https://github.com/nolanlawson/optimize-js/commit/da51013) was tested. Minification was applied using `uglify -mc`, Uglify 2.7.0.
 
-You can also try [a live version of the benchmark](https://nolanlawson.github.io/optimize-js/) (note: very slow, running local is recommended).
+You can also try [a live version of the benchmark](https://nolanlawson.github.io/optimize-js/) (note: very slow, running locally is recommended).
 
 ### Chrome 52, macOS Sierra, 2013 MacBook Pro i5
 
