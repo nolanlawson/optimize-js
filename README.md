@@ -169,6 +169,52 @@ Based on my tests, this optimization seems to work best for V8 (Chrome), followe
 In the case of Chakra, [Uglify-style IIFEs are actually already optimized](https://github.com/mishoo/UglifyJS2/issues/640#issuecomment-247792319), but adding `optimize-js` doesn't hurt because a
 function preceded by `'('` still goes into the fast path.
 
+Benchmarks
+----
+
+These tests were run using a handful of popular libraries, wrapped in `performance.now()` measures. `optimize-js` commit [da51013](https://github.com/nolanlawson/optimize-js/commit/da51013) was tested. Minification was applied using `uglify -mc`, Uglify 2.7.0.
+
+### Chrome 52, macOS Sierra, 2013 MacBook Pro i5
+
+| Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| ImmutableJS | 12.76ms | 1.75ms | **86.29%** | 10.47ms | 1.68ms | **68.81%** |
+| jQuery | 26.73ms | 8.72ms | **67.35%** | 23.02ms | 9.00ms | **52.44%** |
+| Lodash | 29.13ms | 28.03ms | **3.78%** | 20.70ms | 24.45ms | **-12.85%** |
+| Ember+jQuery | 1.48ms | 1.33ms | **10.47%** | 70.93ms | 1.24ms | **4708.78%** |
+| PouchDB | 60.98ms | 31.59ms | **48.19%** | 40.63ms | 32.02ms | **14.13%** |
+| ThreeJS | 10.60ms | 10.16ms | **4.06%** | 66.18ms | 10.33ms | **527.09%** |
+
+Overall improvement: **57.09%**
+
+### Firefox 48, macOS Sierra, 2013 MacBook Pro i5
+
+| Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| ImmutableJS | 4.92ms | 1.74ms | **64.63%** | 2.87ms | 1.31ms | **31.61%** |
+| jQuery | 15.73ms | 12.64ms | **19.61%** | 14.88ms | 12.43ms | **15.58%** |
+| Lodash | 13.80ms | 14.60ms | **-5.76%** | 9.27ms | 9.33ms | **-0.43%** |
+| Ember+jQuery | 3.22ms | 5.55ms | **-72.36%** | 9.42ms | 5.27ms | **128.73%** |
+| PouchDB | 15.05ms | 16.65ms | **-10.63%** | 11.96ms | 11.60ms | **2.42%** |
+| ThreeJS | 21.09ms | 17.63ms | **16.43%** | 26.83ms | 21.68ms | **24.40%** |
+
+Overall improvement: **12.48%**
+
+### Edge 14, Windows 10 RS1, SurfaceBook 4 i5
+
+### Safari 10, macOS Sierra, 2013 MacBook Pro i5
+
+| Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| ImmutableJS | 1.23ms | 1.39ms | **-13.41%** | 1.22ms | 1.12ms | **8.13%** |
+| jQuery | 4.16ms | 3.91ms | **6.01%** | 3.83ms | 3.94ms | **-2.64%** |
+| Lodash | 3.95ms | 3.90ms | **1.27%** | 3.38ms | 3.36ms | **0.38%** |
+| Ember+jQuery | 0.55ms | 0.50ms | **8.18%** | 0.44ms | 0.40ms | **8.18%** |
+| PouchDB | 2.31ms | 2.15ms | **6.72%** | 2.32ms | 2.21ms | **4.99%** |
+| ThreeJS | 8.51ms | 7.62ms | **10.46%** | 8.03ms | 6.82ms | **14.22%** |
+
+Overall improvement: **6.51%**
+
 Contributing
 -----
 
