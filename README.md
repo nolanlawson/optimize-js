@@ -174,7 +174,7 @@ guesses), it can be more judicious in applying the paren hack.
 
 ### Does this really work for every JavaScript engine?
 
-Based on my tests, this optimization seems to work best for V8 (Chrome), followed by Chakra (Edge), followed by SpiderMonkey (Firefox). For JavaScriptCore (Safari) it seems to be basically a wash, or possibly a little worse than without.
+Based on my tests, this optimization seems to work best for V8 (Chrome), followed by Chakra (Edge), followed by SpiderMonkey (Firefox). For JavaScriptCore (Safari) it seems to be basically a wash.
 
 However, I still think `optimize-js` can be useful, because (in my experience) Safari is rarely a performance problem. Instead, most of your performance problems are likely to come from under-powered Android devices, meaning you want V8 to run as fast as possible.
 
