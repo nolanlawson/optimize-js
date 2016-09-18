@@ -97,7 +97,7 @@ function runAll() {
       immutable: 'ImmutableJS',
       'jquery': 'jQuery',
       'lodash': 'Lodash',
-      'ember': 'Ember+jQuery',
+      'ember': 'Ember',
       'pouchdb': 'PouchDB',
       'three': 'ThreeJS'
     }
@@ -132,8 +132,8 @@ function runAll() {
     })
 
     display.innerHTML += table
-    display.innerHTML += '\nOverall improvement: ' +
-        (100 * (totalUnopt - totalOpt) / totalUnopt).toFixed(2) + '%'
+    display.innerHTML += '\nOverall improvement: **' +
+        (100 * (totalUnopt - totalOpt) / totalUnopt).toFixed(2) + '%**'
   }
 
   function next () {
