@@ -245,7 +245,7 @@ See also
 
 * [broccoli-ember-preparse](https://www.npmjs.com/package/broccoli-ember-preparse)
 
-Thanks to @kriselden, @bmaurer, and @pleath for explaining this concept in the various GitHub issues. Thanks also to [astexplorer](https://github.com/fkling/astexplorer), [acorn](https://github.com/ternjs/acorn), and [magic-string](https://www.npmjs.com/package/magic-string) for making the implementation so easy.
+Thanks to [@krisselden](https://github.com/krisselden), i[@bmaurer](https://github.com/bmaurer), and [@pleath](https://github.com/pleath) for explaining this concept in the various GitHub issues. Thanks also to [astexplorer](https://github.com/fkling/astexplorer), [acorn](https://github.com/ternjs/acorn), and [magic-string](https://www.npmjs.com/package/magic-string) for making the implementation so easy.
 
 Contributing
 -----
