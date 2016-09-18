@@ -201,7 +201,7 @@ These tests were run using a handful of popular libraries, wrapped in `performan
 
 Overall improvement: **57.09%**
 
-### Edge 14, Windows 10 RS1, SurfaceBook 4 i5
+### Edge 14, Windows 10 RS1, SurfaceBook i5
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
