@@ -182,7 +182,7 @@ Based on my tests, this optimization seems to work best for V8 (Chrome), followe
 
 However, I still think `optimize-js` can be useful, because (in my experience) Safari is rarely a performance problem. Instead, most of your performance problems are likely to come from under-powered Android devices, meaning you want V8 to run as fast as possible.
 
-In the case of Chakra, [Uglify-style IIFEs are actually already optimized](https://github.com/mishoo/UglifyJS2/issues/640#issuecomment-247792319), but adding `optimize-js` doesn't hurt because a
+In the case of Chakra, [Uglify-style IIFEs are actually already optimized](https://github.com/mishoo/UglifyJS2/issues/640#issuecomment-247792319), but using `optimize-js` doesn't hurt because a
 function preceded by `'('` still goes into the fast path.
 
 Benchmarks
