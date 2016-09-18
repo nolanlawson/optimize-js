@@ -265,3 +265,9 @@ Run the benchmarks:
 ```bash
 npm run benchmark # then open localhost:9090 in a browser
 ```
+
+Test code coverage:
+
+```bash
+npm run coverage
+```

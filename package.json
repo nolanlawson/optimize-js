@@ -7,12 +7,17 @@
     "test": "standard && mocha test/test.js",
     "benchmark": "npm run build-benchmark && hs -p 9090 benchmarks",
     "build-benchmark": "sh bin/build-benchmark.sh",
-    "publish-benchmark": "sh bin/publish-benchmark.sh"
+    "publish-benchmark": "sh bin/publish-benchmark.sh",
+    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha test/test.js && istanbul check-coverage --lines 100 --function 100 --statements 100 --branches 100"
   },
   "bin": {
     "optimize-js": "lib/bin.js"
   },
-  "keywords": ["optimize", "optimise", "js"],
+  "keywords": [
+    "optimize",
+    "optimise",
+    "js"
+  ],
   "author": "Nolan Lawson <nolan@nolanlawson.com>",
   "license": "Apache-2.0",
   "dependencies": {
@@ -26,6 +31,7 @@
     "assert": "^1.4.1",
     "denodeify": "^1.2.1",
     "http-server": "^0.9.0",
+    "istanbul": "^0.4.5",
     "mocha": "^3.0.2",
     "standard": "^7.1.2",
     "uglify-js": "^2.7.0"
