@@ -148,7 +148,7 @@ take gzip into account. To prove it, here are the gzipped sizes for the librarie
 
 ### Is `optimize-js` intended for library authors?
 
-Sure! If you are already shipping a bundled, minified version of your library, then there's no reason not to apply `optimize-js` (assuming you benchmark and it does indeed help!). However, note that `optimize-js` should run _after_ Uglify, since Uglify strips extra parentheses and also [negates IIFEs by default](https://github.com/mishoo/UglifyJS2/issues/640). This also means that if your users apply Uglification to your bundle, then the optimization will be undone.
+Sure! If you are already shipping a bundled, minified version of your library, then there's no reason not to apply `optimize-js` (assuming you benchmark your code to ensure it does indeed help!). However, note that `optimize-js` should run _after_ Uglify, since Uglify strips extra parentheses and also [negates IIFEs by default](https://github.com/mishoo/UglifyJS2/issues/640). This also means that if your users apply Uglification to your bundle, then the optimization will be undone.
 
 Also note that because `optimize-js` optimizes for some patterns that are based on heuristics rather than _known_ eagerly-invoked
 functions, it may actually hurt your performance in some cases. (See benchmarks below for examples.) Be sure to check that `optimize-js` is a help rather than a hindrance for your particular codebase, using something like:
