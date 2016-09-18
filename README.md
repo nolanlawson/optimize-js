@@ -103,7 +103,7 @@ because they're based on a greedy method of checking for a `'('` token immediate
 avoids anything more intricate because it would amount to parsing the whole expression, negating the benefit of the pre-parse). 
 In these kinds of cases (which include
 common module formats like UMD/Browserify/Webpack/etc.), the browser will actually parse the function _twice_, first as a pre-parse and second
-as a full parse. This means that the JavaScript code runs much more slowly overall, because more time is spent parsing than needs to be. See [The cost of small modules](https://nolanlawson.com/2016/08/15/the-cost-of-small-modules/) for an idea of how bad this can get.
+as a full parse. This means that the JavaScript code runs much more slowly overall, because more time is spent parsing than needs to be. See ["The cost of small modules"](https://nolanlawson.com/2016/08/15/the-cost-of-small-modules/) for an idea of how bad this can get.
 
 Luckily, because the `'('` optimization for IIFEs is so well-established, we can exploit this during our build process by
 parsing the entire JavaScript file in advance (a luxury the browser can't afford) and inserting parentheses in the cases where we _know_
