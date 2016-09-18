@@ -128,7 +128,7 @@ In all such cases, `optimise-js` wraps the function in parentheses.
 
 ### But... you're adding bytes!
 
-Yes, `optimize-js` might add as many as two bytes (horror!) per function, which amounts to almost nothing once you
+Yes, `optimize-js` might add as many as two bytes (horror!) per function, which amounts to practically nil once you
 take gzip into account. To prove it, here are the gzipped sizes for the libraries I use in the benchmark:
 
 | Script | Size (bytes |
