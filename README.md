@@ -65,7 +65,7 @@ var output = optimizeJs(input, {
 Benchmark overview
 ----
 
-| Browser | Speed improvement using `optimize-js` |
+| Browser | Average speed boost using `optimize-js` |
 | ---- | ----- |
 | Chrome 52 | 57.09% |
 | Edge 14 | 28.87% |
