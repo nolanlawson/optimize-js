@@ -29,43 +29,6 @@ function runIt(fun){ fun() }
 runIt((function (){}))
 ```
 
-Why?
-----
-
-Modern JavaScript engines like V8, Chakra, and SpiderMonkey have a heuristic where they pre-parse most 
-functions before doing a full parse.
-The pre-parse step merely checks for syntax errors while avoiding the cost of a full parse 
-(binding variables, JITing, etc.).
-
-This heuristic is based on the assumption that, on the average web page, most JavaScript functions are never
-executed or are lazily executed.
-So a pre-parse can prevent a slower startup time by only checking for what the browser absolutely needs
-to know about the function (i.e. whether it's syntactically well-formed or not).
-
-Unfortunately this assumption breaks down in the case of immediately-invoked function expressions (IIFEs), such as these:
-
-```js
-(function () { console.log('executed!') })();
-(function () { console.log('executed Crockford-style!') }());
-!function () { console.log('executed UglifyJS-style!') }();
-```
-
-Since the function is immediately executed, there's no point in parsing it twice. The pre-parse, in these cases, would just be extra overhead.
-
-The good news is that JS engines have a _further_ optimization,
-where they try to detect such IIFEs and skip the pre-parse step. Hooray!
-
-The bad news, though, is that these heuristics don't always work,
-because they're based on a greedy method of checking for a `'('` token immediately to the left of the function. (The parser
-avoids anything more intricate because it would be tantamount to parsing the entire function expression, negating any potential performance
-boost). In cases like these, including
-popular module formats like UMD/Browserify/Webpack/etc., the browser will actually parse the function _twice_, first as a pre-parse and second
-as a full parse. This means that the JavaScript code runs much more slowly overall, because more time is spent parsing than needs to be.
-
-Luckily, because the `'('` optimization for IIFEs is so well-established, we can exploit this during our build process by
-parsing the entire JavaScript file in advance (a luxury the browser can't afford) and inserting parentheses in the cases where we _know_
-the function will be immediately executed (or where we have a good hunch). That's what `optimize-js` does.
-
 CLI
 ----
 
@@ -98,6 +61,42 @@ var output = optimizeJs(input, {
   sourceMap: true
 }); // now the output has source maps
 ```
+
+Why?
+----
+
+Modern JavaScript engines like V8, Chakra, and SpiderMonkey have a heuristic where they pre-parse most 
+functions before doing a full parse.
+The pre-parse step merely checks for syntax errors while avoiding the cost of a full parse 
+(binding variables, JITing, etc.).
+
+This heuristic is based on the assumption that, on the average web page, most JavaScript functions are never
+executed or are lazily executed.
+So a pre-parse can prevent a slower startup time by only checking for what the browser absolutely needs
+to know about the function (i.e. whether it's syntactically well-formed or not).
+
+Unfortunately this assumption breaks down in the case of immediately-invoked function expressions (IIFEs), such as these:
+
+```js
+(function () { console.log('executed!') })();
+(function () { console.log('executed Crockford-style!') }());
+!function () { console.log('executed UglifyJS-style!') }();
+```
+
+The good news is that JS engines have a _further_ optimization,
+where they try to detect such IIFEs and skip the pre-parse step. Hooray!
+
+The bad news, though, is that these heuristics don't always work,
+because they're based on a greedy method of checking for a `'('` token immediately to the left of the function. (The parser
+avoids anything more intricate because it would amount to parsing the whole functions, negating the benefit of the pre-parse). 
+In cases like these, including
+popular module formats like UMD/Browserify/Webpack/etc., the browser will actually parse the function _twice_, first as a pre-parse and second
+as a full parse. This means that the JavaScript code runs much more slowly overall, because more time is spent parsing than needs to be.
+
+Luckily, because the `'('` optimization for IIFEs is so well-established, we can exploit this during our build process by
+parsing the entire JavaScript file in advance (a luxury the browser can't afford) and inserting parentheses in the cases where we _know_
+the function will be immediately executed (or where we have a good hunch). That's what `optimize-js` does.
+
 
 FAQs
 ----

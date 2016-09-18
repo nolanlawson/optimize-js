@@ -19,45 +19,45 @@ body {
 </head>
 <body>
 <h1>optimize-js benchmark</h1>
-<p>All tests are median of 99.</p>
+<p>All tests are median of 251.</p>
 <div>
   <button type=button onclick="runAll()">Run all</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('immutable.js', 99)">Immutable</button>
-  <button type=button onclick="loadScript('immutable.optimized.js', 99)">Immutable opt</button>
-  <button type=button onclick="loadScript('immutable.min.js', 99)">Immutable min</button>
-  <button type=button onclick="loadScript('immutable.min.optimized.js', 99)">Immutable min+opt</button>
+  <button type=button onclick="loadScript('immutable.js', 251)">Immutable</button>
+  <button type=button onclick="loadScript('immutable.optimized.js', 251)">Immutable opt</button>
+  <button type=button onclick="loadScript('immutable.min.js', 251)">Immutable min</button>
+  <button type=button onclick="loadScript('immutable.min.optimized.js', 251)">Immutable min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('jquery.js', 99)">jQuery</button>
-  <button type=button onclick="loadScript('jquery.optimized.js', 99)">jQuery opt</button>
-  <button type=button onclick="loadScript('jquery.min.js', 99)">jQuery min</button>
-  <button type=button onclick="loadScript('jquery.min.optimized.js', 99)">jQuery min+opt</button>
+  <button type=button onclick="loadScript('jquery.js', 251)">jQuery</button>
+  <button type=button onclick="loadScript('jquery.optimized.js', 251)">jQuery opt</button>
+  <button type=button onclick="loadScript('jquery.min.js', 251)">jQuery min</button>
+  <button type=button onclick="loadScript('jquery.min.optimized.js', 251)">jQuery min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('lodash.js', 99)">Lodash</button>
-  <button type=button onclick="loadScript('lodash.optimized.js', 99)">Lodash opt</button>
-  <button type=button onclick="loadScript('lodash.min.js', 99)">Lodash min</button>
-  <button type=button onclick="loadScript('lodash.min.optimized.js', 99)">Lodash min+opt</button>
+  <button type=button onclick="loadScript('lodash.js', 251)">Lodash</button>
+  <button type=button onclick="loadScript('lodash.optimized.js', 251)">Lodash opt</button>
+  <button type=button onclick="loadScript('lodash.min.js', 251)">Lodash min</button>
+  <button type=button onclick="loadScript('lodash.min.optimized.js', 251)">Lodash min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('ember.js', 99)">Ember</button>
-  <button type=button onclick="loadScript('ember.optimized.js', 99)">Ember opt</button>
-  <button type=button onclick="loadScript('ember.min.js', 99)">Ember min</button>
-  <button type=button onclick="loadScript('ember.min.optimized.js', 99)">Ember min+opt</button>
+  <button type=button onclick="loadScript('ember.js', 251)">Ember</button>
+  <button type=button onclick="loadScript('ember.optimized.js', 251)">Ember opt</button>
+  <button type=button onclick="loadScript('ember.min.js', 251)">Ember min</button>
+  <button type=button onclick="loadScript('ember.min.optimized.js', 251)">Ember min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('pouchdb.js', 99)">PouchDB</button>
+  <button type=button onclick="loadScript('pouchdb.js', 251)">PouchDB</button>
   <button type=button onclick="loadScript('pouchdb.optimized.js', 25)">PouchDB opt</button>
-  <button type=button onclick="loadScript('pouchdb.min.js', 99)">PouchDB min</button>
+  <button type=button onclick="loadScript('pouchdb.min.js', 251)">PouchDB min</button>
   <button type=button onclick="loadScript('pouchdb.min.optimized.js', 25)">PouchDB min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('three.js', 99)">Three.js</button>
-  <button type=button onclick="loadScript('three.optimized.js', 99)">Three.js opt</button>
-  <button type=button onclick="loadScript('three.min.js', 99)">Three.js min</button>
-  <button type=button onclick="loadScript('three.min.optimized.js', 99)">Three.js min+opt</button>
+  <button type=button onclick="loadScript('three.js', 251)">Three.js</button>
+  <button type=button onclick="loadScript('three.optimized.js', 251)">Three.js opt</button>
+  <button type=button onclick="loadScript('three.min.js', 251)">Three.js min</button>
+  <button type=button onclick="loadScript('three.min.optimized.js', 251)">Three.js min+opt</button>
 </div>
 <div>
 <pre id=display></pre>
@@ -156,7 +156,7 @@ function runAll() {
         type = '.min.optimized.js'
         break
     }
-    loadScript(script + type, 99, function (median) {
+    loadScript(script + type, 251, function (median) {
       results.push({
         script: script,
         type: type,
