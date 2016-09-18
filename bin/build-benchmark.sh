@@ -8,4 +8,3 @@ for js in `echo ./benchmarks/*js | tr ' ' '\n' | grep -v optimized | grep -v min
   node lib/bin.js < $js > $opt
   node lib/bin.js < $min > $minopt
 done
-./node_modules/.bin/hs -p 9090 benchmarks

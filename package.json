@@ -5,7 +5,9 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "standard && mocha test/test.js",
-    "benchmark": "sh bin/benchmark.sh"
+    "benchmark": "npm run build-benchmark && hs -p 9090 benchmark",
+    "build-benchmark": "sh bin/build-benchmark.sh",
+    "publish-benchmark": "sh bin/build-benchmark.sh"
   },
   "bin": {
     "optimize-js": "lib/bin.js"
