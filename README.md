@@ -186,6 +186,8 @@ Benchmarks
 
 These tests were run using a handful of popular libraries, wrapped in `performance.now()` measures. Each test was the median of 251 runs. `optimize-js` commit [da51013](https://github.com/nolanlawson/optimize-js/commit/da51013) was tested. Minification was applied using `uglify -mc`, Uglify 2.7.0.
 
+You can also try [a live version of the benchmark](https://nolanlawson.github.io/optimize-js/) (note: very slow, running local is recommended).
+
 ### Chrome 52, macOS Sierra, 2013 MacBook Pro i5
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
