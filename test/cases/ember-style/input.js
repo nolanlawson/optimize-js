@@ -5,4 +5,5 @@
     return t(e)
   } : t(e)
 })(true), function () {
+  console.log('optimize me!');
 }();
