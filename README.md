@@ -174,9 +174,7 @@ guesses), it can be more judicious in applying the paren hack.
 
 ### Does this really work for every JavaScript engine?
 
-Based on my tests, this optimization seems to work best for V8 (Chrome), followed by Chakra (Edge), followed by SpiderMonkey (Firefox). For JavaScriptCore (Safari) it seems to be basically a wash.
-
-However, I still think `optimize-js` can be useful, because (in my experience) Safari is rarely a performance problem. Instead, most of your performance problems are likely to come from under-powered Android devices, meaning you want V8 to run as fast as possible.
+Based on my tests, this optimization seems to work best for V8 (Chrome), followed by Chakra (Edge), followed by SpiderMonkey (Firefox). For JavaScriptCore (Safari) it seems to be basically a wash, although it's hard to tell because JSCore is so fast already that the numbers are tiny.
 
 In the case of Chakra, [Uglify-style IIFEs are actually already optimized](https://github.com/mishoo/UglifyJS2/issues/640#issuecomment-247792319), but using `optimize-js` doesn't hurt because a
 function preceded by `'('` still goes into the fast path.
