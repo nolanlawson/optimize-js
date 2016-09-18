@@ -154,7 +154,7 @@ apply `optimize-js` (assuming you benchmark it and it does indeed help!). Howeve
 Ideally, `optimize-js` should be run _after_ Uglify, since Uglify strips extra parentheses and also [negates IIFEs by default](https://github.com/mishoo/UglifyJS2/issues/640).
 
 Note that because `optimize-js` optimizes for some patterns that are based on heuristics rather than _known_ eagerly-invoked
-functions, it may actually hurt your performance in some cases. Be sure to check that it actually helps your own code,
+functions, it may actually hurt your performance in some cases. (See benchmarks below for examples.) Be sure to check that it helps your own code,
 using something like:
 
 ```js
