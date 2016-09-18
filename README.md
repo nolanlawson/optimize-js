@@ -240,6 +240,13 @@ Overall improvement: **6.51%**
 
 Note that these results may vary based on your machine, how taxed your CPU is, gremlins, etc. I ran the full suite a few times on all browsers and found these numbers to be roughly representative. However, the final "overall improvement" may vary by as much as 5%, and individual libraries can swing a bit too.
 
+See also
+---
+
+* [broccoli-ember-preparse](https://www.npmjs.com/package/broccoli-ember-preparse)
+
+Thanks to @kriselden, @bmaurer, and @pleath for explaining this concept in the various GitHub issues. Thanks also to [astexplorer](https://github.com/fkling/astexplorer), [acorn](https://github.com/ternjs/acorn), and [magic-string](https://www.npmjs.com/package/magic-string) for making the implementation so easy.
+
 Contributing
 -----
 
