@@ -11,7 +11,7 @@ button {
   margin: 5px;
 }
 body {
-  max-width: 600px;
+  max-width: 800px;
   margin: 20px auto;
   font-family: Helvetica, Arial, "sans-serif";
 }
@@ -88,30 +88,81 @@ function loadScript(src, num, cb) {
   load()
 }
 function runAll() {
+  var results = []
   var scripts = ['immutable', 'jquery', 'lodash', 'ember', 'pouchdb', 'three']
   var i = -1
-  function next() {
-    if (++i === scripts.length * 4) {
-      return // done
+
+  function done () {
+    var scriptNames = {
+      immutable: 'ImmutableJS',
+      'jquery': 'jQuery',
+      'lodash': 'Lodash',
+      'ember': 'Ember+jQuery',
+      'pouchdb': 'PouchDB',
+      'three': 'ThreeJS'
     }
-    ~~(i / scripts.length)
-    var src = scripts[~~(i / 4)]
+    var scriptsToTimes = {}
+    results.forEach(function (result) {
+      scriptsToTimes[result.script] = scriptsToTimes[result.script] || {}
+      scriptsToTimes[result.script][result.type] = result.median
+    })
+
+    // format results as markdown
+    var table = '| Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |' +
+      '\n| ---- | ---- | ---- | ---- | ---- | ---- | ---- |'
+    var totalUnopt = 0
+    var totalOpt = 0
+    Object.keys(scriptsToTimes).forEach(function (script) {
+      var times = scriptsToTimes[script]
+      var jsTime = times['.js']
+      var optTime = times['.optimized.js']
+      var minTime = times['.min.js']
+      var minOptTime = times['.min.optimized.js']
+      totalUnopt += jsTime + minTime
+      totalOpt += optTime + minOptTime
+      table += '\n| ' + [
+        scriptNames[script],
+        jsTime.toFixed(2) + 'ms',
+        optTime.toFixed(2) + 'ms',
+        '**' + (100 * (jsTime - optTime) / jsTime).toFixed(2) + '%**',
+        minTime.toFixed(2) + 'ms',
+        minOptTime.toFixed(2) + 'ms',
+        '**' + (100 * (minTime - minOptTime) / jsTime).toFixed(2) + '%**'
+      ].join(' | ') + ' |'
+    })
+
+    display.innerHTML += table
+    display.innerHTML += '\nOverall improvement: ' +
+        (100 * (totalUnopt - totalOpt) / totalUnopt).toFixed(2) + '%'
+  }
+
+  function next () {
+    if (++i === scripts.length * 4) {
+      return done()
+    }
+    var script = scripts[~~(i / 4)]
+    var type
     switch (i % 4) {
       case 0:
-        src += '.js'
+        type = '.js'
         break
       case 1:
-        src += '.optimized.js'
+        type = '.optimized.js'
         break
       case 2:
-        src += '.min.js'
+        type = '.min.js'
         break
       case 3:
-        src += '.min.optimized.js'
+        type = '.min.optimized.js'
         break
     }
-    loadScript(src, 99, function (median) {
-      display.innerHTML += src + ': ' + median + 'ms\n'
+    loadScript(script + type, 99, function (median) {
+      results.push({
+        script: script,
+        type: type,
+        median: median
+      })
+      display.innerHTML += script + type + ': ' + median.toFixed(2) + 'ms\n'
       next()
     })
   }
