@@ -240,6 +240,8 @@ Overall improvement: **12.48%**
 
 Overall improvement: **6.51%**
 
+Note that these results may vary based on your machine, how taxed your CPU is, gremlins, etc. I ran the full suite a few times on all browsers and found these numbers to be roughly representative. However, the final "overall improvement" may vary by as much as 5%, and individual libraries can swing a bit too.
+
 Contributing
 -----
 
