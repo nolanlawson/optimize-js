@@ -1,7 +1,7 @@
 {
   "name": "optimize-js",
-  "version": "1.1.1",
-  "description": "Wrap functions that are immediateley executed in parentheses",
+  "version": "1.0.0",
+  "description": "Optimize JavaScript execution by wrapping eager functions",
   "main": "lib/index.js",
   "scripts": {
     "test": "standard && mocha test/test.js",
@@ -10,7 +10,7 @@
   "bin": {
     "optimize-js": "lib/bin.js"
   },
-  "keywords": [],
+  "keywords": ["optimize", "optimise", "js"],
   "author": "Nolan Lawson <nolan@nolanlawson.com>",
   "license": "Apache-2.0",
   "dependencies": {
@@ -41,5 +41,13 @@
       "test/cases/**",
       "benchmarks/**"
     ]
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nolanlawson/optimize-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nolanlawson/optimize-js/issues"
+  },
+  "homepage": "https://github.com/nolanlawson/optimize-js#readme"
 }
