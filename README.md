@@ -62,6 +62,18 @@ var output = optimizeJs(input, {
 }); // now the output has source maps
 ```
 
+Benchmark overview
+----
+
+| Browser | Speed improvement using `optimize-js` |
+| ---- | ----- |
+| Chrome 52 | 57.09% |
+| Edge 14 | 28.87% |
+| Firefox 48 | 12.48% |
+| Safari 10 | 6.51% |
+
+For benchmark details, see [benchmarks](#benchmarks).
+
 Why?
 ----
 
@@ -152,6 +164,8 @@ var end = performance.now();
 console.log('took ' + (end - start) + 'ms');
 ```
 
+Also, be sure to test in multiple browsers! If you need an Edge VM, check out [edge.ms](http://edge.ms).
+
 ### Shouldn't this be Uglify's job?
 
 Possibly! This is a free and open-source library, so I encourage anybody to borrow the code or the good ideas. :)
@@ -187,6 +201,19 @@ These tests were run using a handful of popular libraries, wrapped in `performan
 
 Overall improvement: **57.09%**
 
+### Edge 14, Windows 10 RS1, SurfaceBook 4 i5
+
+| Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| ImmutableJS | 5.11ms | 1.00ms | **80.52%** | 4.61ms | 1.00ms | **70.55%** |
+| jQuery | 21.62ms | 12.31ms | **43.06%** | 21.27ms | 12.69ms | **39.69%** |
+| Lodash | 22.10ms | 21.81ms | **1.29%** | 19.97ms | 19.05ms | **4.12%** |
+| Ember+jQuery | 0.33ms | 0.32ms | **1.49%** | 0.33ms | 0.32ms | **1.62%** |
+| PouchDB | 37.54ms | 28.44ms | **24.24%** | 47.81ms | 65.23ms | **-46.40%** |
+| ThreeJS | 30.90ms | 19.08ms | **38.25%** | 68.94ms | 18.26ms | **164.00%** |
+
+Overall improvement: **28.87%**
+
 ### Firefox 48, macOS Sierra, 2013 MacBook Pro i5
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
@@ -199,8 +226,6 @@ Overall improvement: **57.09%**
 | ThreeJS | 21.09ms | 17.63ms | **16.43%** | 26.83ms | 21.68ms | **24.40%** |
 
 Overall improvement: **12.48%**
-
-### Edge 14, Windows 10 RS1, SurfaceBook 4 i5
 
 ### Safari 10, macOS Sierra, 2013 MacBook Pro i5
 
