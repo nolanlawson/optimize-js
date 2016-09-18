@@ -121,7 +121,7 @@ The current implementation is to parse the syntax tree and check for functions t
 1. Are immediately-invoked via any kind of call statement (`function(){}()`, `!function(){}()`, etc.)
 2. Are passed in directly as arguments to another function
 
-The first method is an easy win – those functions are eagerly executed. The second method is more of a herustic, but tends
+The first method is an easy win – those functions are eagerly executed. The second method is more of a heuristic, but tends
 to be a safe bet given common patterns like Node-style errbacks, Promise chains, and UMD/Browserify/Webpack module declarations. 
 
 In all such cases, `optimise-js` wraps the function in parentheses.
