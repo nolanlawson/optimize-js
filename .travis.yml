@@ -1,12 +1,12 @@
 language: node_js
-
 node_js:
-  - "6"
-
+- "6"
 sudo: false
-
-script: npm test
-
+script: npm run $COMMAND
+env:
+  matrix:
+  - COMMAND=test
+  - COMMAND=coverage
 branches:
   only:
   - master
