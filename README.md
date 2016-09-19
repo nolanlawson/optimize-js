@@ -61,14 +61,14 @@ JavaScript API
 
 ```js
 var optimizeJs = require('optimize-js');
-var input = "!function() {console.log('wrap me!'})";
+var input = "!function() {console.log('wrap me!')}";
 var output = optimizeJs(input); // "!(function() {console.log('wrap me!'})()"
 ```
 
 You can also pass in arguments:
 ```js
 var optimizeJs = require('optimize-js');
-var input = "!function() {console.log('wrap me!'})";
+var input = "!function() {console.log('wrap me!')}";
 var output = optimizeJs(input, {
   sourceMap: true
 }); // now the output has source maps
