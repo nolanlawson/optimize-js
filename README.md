@@ -182,7 +182,7 @@ function preceded by `'('` still goes into the fast path.
 Benchmarks
 ----
 
-These tests were run using a handful of popular libraries, wrapped in `performance.now()` measurements. Each test reported the median of 251 runs. `optimize-js` commit [da51013](https://github.com/nolanlawson/optimize-js/commit/da51013) was tested. Minification was applied using `uglify -mc`, Uglify 2.7.0.
+These tests were run using a handful of popular libraries, wrapped in `performance.now()` measurements. Each test reported the median of 251 runs. `optimize-js` commit [da51013](https://github.com/nolanlawson/optimize-js/commit/da51013) was tested. Minification was applied using `uglifyjs -mc`, Uglify 2.7.0.
 
 You can also try [a live version of the benchmark](https://nolanlawson.github.io/optimize-js/) (note: very slow, running locally is recommended).
 
