@@ -123,7 +123,7 @@ The current implementation is to parse the syntax tree and check for functions t
 The first method is an easy win – those functions are immediately executed. The second method is more of a heuristic, but tends
 to be a safe bet given common patterns like Node-style errbacks, Promise chains, and UMD/Browserify/Webpack module declarations. 
 
-In all such cases, `optimise-js` wraps the function in parentheses.
+In all such cases, `optimize-js` wraps the function in parentheses.
 
 ### But... you're adding bytes!
 
