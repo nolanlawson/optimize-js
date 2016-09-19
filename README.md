@@ -79,8 +79,7 @@ Why?
 
 Modern JavaScript engines like V8, Chakra, and SpiderMonkey have a heuristic where they pre-parse most 
 functions before doing a full parse.
-The pre-parse step merely checks for syntax errors while avoiding the cost of a full parse 
-(binding variables, JITing, etc.).
+The pre-parse step merely checks for syntax errors while avoiding the cost of a full parse.
 
 This heuristic is based on the assumption that, on the average web page, most JavaScript functions are never
 executed or are lazily executed.
