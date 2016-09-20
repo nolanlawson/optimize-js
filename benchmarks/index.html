@@ -135,7 +135,7 @@ function runAll() {
         '**' + (100 * (jsTime - optTime) / jsTime).toFixed(2) + '%**',
         minTime.toFixed(2) + 'ms',
         minOptTime.toFixed(2) + 'ms',
-        '**' + (100 * (minTime - minOptTime) / jsTime).toFixed(2) + '%**'
+        '**' + (100 * (minTime - minOptTime) / minTime).toFixed(2) + '%**'
       ].join(' | ') + ' |'
     })
 
