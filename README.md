@@ -1,7 +1,7 @@
 optimize-js [![Build Status](https://travis-ci.org/nolanlawson/optimize-js.svg?branch=master)](https://travis-ci.org/nolanlawson/optimize-js) [![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 ========
 
-Optimize a JavaScript file for faster execution, by wrapping all immediately-invoked functions or likely-to-be-invoked functions in parentheses.
+Optimize a JavaScript file for faster initial execution and parsing, by wrapping all immediately-invoked functions or likely-to-be-invoked functions in parentheses.
 
 Install
 ---
