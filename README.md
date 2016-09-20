@@ -62,7 +62,7 @@ JavaScript API
 ```js
 var optimizeJs = require('optimize-js');
 var input = "!function() {console.log('wrap me!')}";
-var output = optimizeJs(input); // "!(function() {console.log('wrap me!'})()"
+var output = optimizeJs(input); // "!(function() {console.log('wrap me!')})()"
 ```
 
 You can also pass in arguments:
