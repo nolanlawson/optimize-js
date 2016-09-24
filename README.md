@@ -100,7 +100,7 @@ where they try to detect such IIFEs and skip the pre-parse step. Hooray!
 The bad news, though, is that these heuristics don't always work,
 because they're based on a greedy method of checking for a `'('` token immediately to the left of the function. (The parser
 avoids anything more intricate because it would amount to parsing the whole thing, negating the benefit of the pre-parse). 
-In these kinds of cases (which include
+In cases without the paren (which include
 common module formats like UMD/Browserify/Webpack/etc.), the browser will actually parse the function _twice_, first as a pre-parse and second
 as a full parse. This means that the JavaScript code runs much more slowly overall, because more time is spent parsing than needs to be. See ["The cost of small modules"](https://nolanlawson.com/2016/08/15/the-cost-of-small-modules/) for an idea of how bad this can get.
 
