@@ -243,6 +243,8 @@ See also
 ---
 
 * [broccoli-ember-preparse](https://www.npmjs.com/package/broccoli-ember-preparse)
+* [to-fast-properties](https://github.com/sindresorhus/to-fast-properties)
+* [V8LazyParsePlugin](https://github.com/TheLarkInn/V8LazyParseWebpackPlugin)
 
 Thanks
 ----
