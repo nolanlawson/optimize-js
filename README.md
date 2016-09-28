@@ -34,10 +34,10 @@ Benchmark overview
 
 | Browser | Typical speed boost using `optimize-js` |
 | ---- | ----- |
-| Chrome 52 | 45.87% |
-| Edge 14 | 29.47% |
-| Firefox 48 | 12.36% |
-| Safari 10 | 4.63% |
+| Chrome 52 | 57.09% |
+| Edge 14 | 28.88% |
+| Firefox 48 | 12.49% |
+| Safari 10 | 6.54% |
 
 For benchmark details, see [benchmarks](#benchmarks).
 
@@ -189,27 +189,27 @@ You can also try [a live version of the benchmark](https://nolanlawson.github.io
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| ImmutableJS | 12.76ms | 1.75ms | **86.29%** | 10.47ms | 1.68ms | **86.29%** |
-| jQuery | 26.73ms | 8.72ms | **67.38%** | 23.02ms | 9.00ms | **67.38%** |
-| Lodash | 29.13ms | 28.03ms | **3.78%** | 20.70ms | 24.45ms | **3.78%** |
-| Ember | 1.48ms | 1.33ms | **10.14%** | 70.93ms | 1.24ms | **10.14%** |
-| PouchDB | 60.98ms | 31.59ms | **48.20%** | 40.63ms | 32.02ms | **48.20%** |
-| ThreeJS | 10.60ms | 10.16ms | **4.15%** | 66.18ms | 10.33ms | **4.15%** |
+| ImmutableJS | 12.76ms | 1.75ms | **86.29%** | 10.47ms | 1.68ms | **83.95%** |
+| jQuery | 26.73ms | 8.72ms | **67.38%** | 23.02ms | 9ms | **60.90%** |
+| Lodash | 29.13ms | 28.03ms | **3.78%** | 20.7ms | 24.45ms | **-18.12%** |
+| Ember | 1.48ms | 1.33ms | **10.14%** | 70.93ms | 1.24ms | **98.25%** |
+| PouchDB | 60.98ms | 31.59ms | **48.20%** | 40.63ms | 32.02ms | **21.19%** |
+| ThreeJS | 10.6ms | 10.16ms | **4.15%** | 66.18ms | 10.33ms | **84.39%** |
 
-Overall improvement: **45.87%**
+Overall improvement: **57.09%**
 
 ### Edge 14, Windows 10 RS1, SurfaceBook i5
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| ImmutableJS | 5.11ms | 1.00ms | **80.43%** | 4.61ms | 1.00ms | **78.31%** |
+| ImmutableJS | 5.11ms | 1ms | **80.43%** | 4.61ms | 1ms | **78.31%** |
 | jQuery | 21.62ms | 12.31ms | **43.06%** | 21.27ms | 12.69ms | **40.34%** |
-| Lodash | 22.10ms | 21.81ms | **1.31%** | 19.97ms | 19.05ms | **4.61%** |
+| Lodash | 22.1ms | 21.81ms | **1.31%** | 19.97ms | 19.05ms | **4.61%** |
 | Ember | 0.33ms | 0.32ms | **3.03%** | 0.33ms | 0.32ms | **3.03%** |
 | PouchDB | 37.54ms | 28.44ms | **24.24%** | 47.81ms | 65.23ms | **-36.44%** |
-| ThreeJS | 30.90ms | 19.08ms | **38.25%** | 68.94ms | 18.26ms | **73.51%** |
+| ThreeJS | 30.9ms | 19.08ms | **38.25%** | 68.94ms | 18.26ms | **73.51%** |
 
-Overall improvement: **29.47%**
+Overall improvement: **28.88%**
 
 ### Firefox 48, macOS Sierra, 2013 MacBook Pro i5
 
@@ -217,12 +217,12 @@ Overall improvement: **29.47%**
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | ImmutableJS | 4.92ms | 1.74ms | **64.63%** | 2.87ms | 1.31ms | **54.36%** |
 | jQuery | 15.73ms | 12.64ms | **19.64%** | 14.88ms | 12.43ms | **16.47%** |
-| Lodash | 13.80ms | 14.60ms | **-5.80%** | 9.27ms | 9.33ms | **-0.65%** |
+| Lodash | 13.8ms | 14.6ms | **-5.80%** | 9.27ms | 9.33ms | **-0.65%** |
 | Ember | 3.22ms | 5.55ms | **-72.36%** | 9.42ms | 5.27ms | **44.06%** |
-| PouchDB | 15.05ms | 16.65ms | **-10.63%** | 11.96ms | 11.60ms | **3.01%** |
+| PouchDB | 15.05ms | 16.65ms | **-10.63%** | 11.96ms | 11.6ms | **3.01%** |
 | ThreeJS | 21.09ms | 17.63ms | **16.41%** | 26.83ms | 21.68ms | **19.19%** |
 
-Overall improvement: **12.36%**
+Overall improvement: **12.49%**
 
 ### Safari 10, macOS Sierra, 2013 MacBook Pro i5
 
@@ -230,12 +230,12 @@ Overall improvement: **12.36%**
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | ImmutableJS | 1.23ms | 1.39ms | **-13.01%** | 1.22ms | 1.12ms | **8.20%** |
 | jQuery | 4.16ms | 3.91ms | **6.01%** | 3.83ms | 3.94ms | **-2.87%** |
-| Lodash | 3.95ms | 3.90ms | **1.27%** | 3.38ms | 3.36ms | **0.59%** |
-| Ember | 0.55ms | 0.50ms | **9.09%** | 0.44ms | 0.40ms | **9.09%** |
+| Lodash | 3.95ms | 3.9ms | **1.27%** | 3.38ms | 3.36ms | **0.59%** |
+| Ember | 0.55ms | 0.5ms | **9.09%** | 0.44ms | 0.4ms | **9.09%** |
 | PouchDB | 2.31ms | 2.15ms | **6.93%** | 2.32ms | 2.21ms | **4.74%** |
 | ThreeJS | 8.51ms | 7.62ms | **10.46%** | 8.03ms | 6.82ms | **15.07%** |
 
-Overall improvement: **4.63%**
+Overall improvement: **6.54%**
 
 Note that these results may vary based on your machine, how taxed your CPU is, gremlins, etc. I ran the full suite a few times on all browsers and found these numbers to be roughly representative. However, the final "overall improvement" may vary by as much as 5%, and individual libraries can swing a bit too.
 
