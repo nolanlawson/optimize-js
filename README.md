@@ -108,7 +108,7 @@ Luckily, because the `'('` optimization for IIFEs is so well-established, we can
 parsing the entire JavaScript file in advance (a luxury the browser can't afford) and inserting parentheses in the cases where we _know_
 the function will be immediately executed (or where we have a good hunch). That's what `optimize-js` does.
 
-More details on the IIFE optimization can be found in [this discussion](https://github.com/mishoo/UglifyJS2/issues/886).
+More details on the IIFE optimization can be found in [this discussion](https://github.com/mishoo/UglifyJS2/issues/886). Some of my thoughts on the virtues of compile-time optimizations can be found in [this post](https://gist.github.com/nolanlawson/e73c61da78ffb39e4fc034a62ce8b263).
 
 FAQs
 ----
