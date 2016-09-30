@@ -14,13 +14,14 @@ var benchmarkLibs = fs.readdirSync('benchmarks').filter(function (script) {
 describe('main test suite', function () {
   it('test sourcemaps', function () {
     var res = optimizeJs('var baz = function () { console.log("foo") }()', {
-      sourceMap: true
+      file: 'optimized.js',
+      source: 'original.js',
+      sourceMap: true,
+      includeContent: true
     })
     assert.equal(res, 'var baz = (function () { console.log("foo") })()' +
       '\n//# sourceMappingURL=data:application/json;charset=utf-8;' +
-      'base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjpudWxsLCJzb3VyY2VzIjpbbn' +
-      'VsbF0sInNvdXJjZXNDb250ZW50IjpbbnVsbF0sIm5hbWVzIjpbXSwibWFwcGl' +
-      'uZ3MiOiJBQUFBLFVBQVUsQ0FBQSxrQ0FBa0MsQ0FBQSJ9')
+      'base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoib3B0aW1pemVkLmpzIiwic291cmNlcyI6WyJvcmlnaW5hbC5qcyJdLCJzb3VyY2VzQ29udGVudCI6WyJ2YXIgYmF6ID0gZnVuY3Rpb24gKCkgeyBjb25zb2xlLmxvZyhcImZvb1wiKSB9KCkiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsSUFBSSxHQUFHLEdBQUcsQ0FBQSxZQUFZLEVBQUUsT0FBTyxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsRUFBRSxDQUFBIn0=')
   })
   testCases.forEach(function (testCase) {
     it('test ' + testCase, function () {
