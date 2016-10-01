@@ -130,20 +130,20 @@ In all such cases, `optimize-js` wraps the function in parentheses.
 Yes, `optimize-js` might add as many as two bytes (horror!) per function, which amounts to practically nil once you
 take gzip into account. To prove it, here are the gzipped sizes for the libraries I use in the benchmark:
 
-| Script | Size (bytes) |
-| ---- | --- |
-| benchmarks/ember.min.js | 126957 |
-| benchmarks/ember.min.optimized.js | 127134 |
-| benchmarks/immutable.min.js | 15782 |
-| benchmarks/immutable.min.optimized.js | 15809 |
-| benchmarks/jquery.min.js | 30450 |
-| benchmarks/jquery.min.optimized.js | 30524 |
-| benchmarks/lodash.min.js | 24528 |
-| benchmarks/lodash.min.optimized.js | 24577 |
-| benchmarks/pouchdb.min.js | 45298 |
-| benchmarks/pouchdb.min.optimized.js | 45426 |
-| benchmarks/three.min.js | 125070 |
-| benchmarks/three.min.optimized.js | 125129 |
+| Script | Size (bytes) | Difference (bytes)
+| ---- | --- | --- |
+| benchmarks/ember.min.js | 126957 | |
+| benchmarks/ember.min.optimized.js | 127134 | +177 |
+| benchmarks/immutable.min.js | 15782 | |
+| benchmarks/immutable.min.optimized.js | 15809 | +27 |
+| benchmarks/jquery.min.js | 30450 | |
+| benchmarks/jquery.min.optimized.js | 30524 | +74 |
+| benchmarks/lodash.min.js | 24528 | |
+| benchmarks/lodash.min.optimized.js | 24577 | +49 |
+| benchmarks/pouchdb.min.js | 45298 | |
+| benchmarks/pouchdb.min.optimized.js | 45426 | +128 |
+| benchmarks/three.min.js | 125070 | |
+| benchmarks/three.min.optimized.js | 125129 | +59 |
 
 ### Is `optimize-js` intended for library authors?
 
