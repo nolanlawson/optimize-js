@@ -3,3 +3,4 @@ npm-debug.log
 /benchmarks/**/*.optimized.js
 /benchmarks/**/*.min.js
 /coverage
+*~
