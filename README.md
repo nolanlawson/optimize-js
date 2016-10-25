@@ -243,6 +243,7 @@ Plugins
 ---
 
 * [Grunt plugin for optimize-js](https://github.com/sergejmueller/grunt-optimize-js)
+* [Gulp plugin for optimize-js](https://github.com/prateekbh/gulp-optimize-js)
 
 See also
 ---
