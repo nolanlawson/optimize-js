@@ -3,6 +3,13 @@
 <head>
 <title>optimize-js benchmark</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.4/nv.d3.min.css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.4/nv.d3.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.5.3/jstat.min.js"></script>
+
 <style>
 button {
   display: inline-block;
@@ -15,7 +22,32 @@ body {
   margin: 20px auto;
   font-family: Helvetica, Arial, "sans-serif";
 }
+
+text {
+    font: 12px sans-serif;
+}
+svg {
+    display: block;
+}
+
+.gallery {
+  display: none;
+}
+
+.gallery, svg {
+  height: 300px;
+  width: 100%;
+}
+
+.title {
+  font-weight: bold;
+  font-size: 16px;
+}
+
 </style>
+<script>
+  window.loadCount = 40;
+</script>
 </head>
 <body>
 <a href="https://github.com/nolanlawson/optimize-js"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
@@ -32,59 +64,96 @@ npm run benchmark</code></pre>
   <button type=button onclick="runAll()">Run all</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('immutable.js', 251)">Immutable</button>
-  <button type=button onclick="loadScript('immutable.optimized.js', 251)">Immutable opt</button>
-  <button type=button onclick="loadScript('immutable.min.js', 251)">Immutable min</button>
-  <button type=button onclick="loadScript('immutable.min.optimized.js', 251)">Immutable min+opt</button>
+  <button type=button onclick="loadScript('immutable.js', loadCount)">Immutable</button>
+  <button type=button onclick="loadScript('immutable.optimized.js', loadCount)">Immutable opt</button>
+  <button type=button onclick="loadScript('immutable.min.js', loadCount)">Immutable min</button>
+  <button type=button onclick="loadScript('immutable.min.optimized.js', loadCount)">Immutable min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('jquery.js', 251)">jQuery</button>
-  <button type=button onclick="loadScript('jquery.optimized.js', 251)">jQuery opt</button>
-  <button type=button onclick="loadScript('jquery.min.js', 251)">jQuery min</button>
-  <button type=button onclick="loadScript('jquery.min.optimized.js', 251)">jQuery min+opt</button>
+  <button type=button onclick="loadScript('jquery.js', loadCount)">jQuery</button>
+  <button type=button onclick="loadScript('jquery.optimized.js', loadCount)">jQuery opt</button>
+  <button type=button onclick="loadScript('jquery.min.js', loadCount)">jQuery min</button>
+  <button type=button onclick="loadScript('jquery.min.optimized.js', loadCount)">jQuery min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('lodash.js', 251)">Lodash</button>
-  <button type=button onclick="loadScript('lodash.optimized.js', 251)">Lodash opt</button>
-  <button type=button onclick="loadScript('lodash.min.js', 251)">Lodash min</button>
-  <button type=button onclick="loadScript('lodash.min.optimized.js', 251)">Lodash min+opt</button>
+  <button type=button onclick="loadScript('lodash.js', loadCount)">Lodash</button>
+  <button type=button onclick="loadScript('lodash.optimized.js', loadCount)">Lodash opt</button>
+  <button type=button onclick="loadScript('lodash.min.js', loadCount)">Lodash min</button>
+  <button type=button onclick="loadScript('lodash.min.optimized.js', loadCount)">Lodash min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('ember.js', 251)">Ember</button>
-  <button type=button onclick="loadScript('ember.optimized.js', 251)">Ember opt</button>
-  <button type=button onclick="loadScript('ember.min.js', 251)">Ember min</button>
-  <button type=button onclick="loadScript('ember.min.optimized.js', 251)">Ember min+opt</button>
+  <button type=button onclick="loadScript('ember.js', loadCount)">Ember</button>
+  <button type=button onclick="loadScript('ember.optimized.js', loadCount)">Ember opt</button>
+  <button type=button onclick="loadScript('ember.min.js', loadCount)">Ember min</button>
+  <button type=button onclick="loadScript('ember.min.optimized.js', loadCount)">Ember min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('pouchdb.js', 251)">PouchDB</button>
-  <button type=button onclick="loadScript('pouchdb.optimized.js', 25)">PouchDB opt</button>
-  <button type=button onclick="loadScript('pouchdb.min.js', 251)">PouchDB min</button>
-  <button type=button onclick="loadScript('pouchdb.min.optimized.js', 25)">PouchDB min+opt</button>
+  <button type=button onclick="loadScript('pouchdb.js', loadCount)">PouchDB</button>
+  <button type=button onclick="loadScript('pouchdb.optimized.js', loadCount)">PouchDB opt</button>
+  <button type=button onclick="loadScript('pouchdb.min.js', loadCount)">PouchDB min</button>
+  <button type=button onclick="loadScript('pouchdb.min.optimized.js', loadCount)">PouchDB min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('three.js', 251)">Three.js</button>
-  <button type=button onclick="loadScript('three.optimized.js', 251)">Three.js opt</button>
-  <button type=button onclick="loadScript('three.min.js', 251)">Three.js min</button>
-  <button type=button onclick="loadScript('three.min.optimized.js', 251)">Three.js min+opt</button>
+  <button type=button onclick="loadScript('three.js', loadCount)">Three.js</button>
+  <button type=button onclick="loadScript('three.optimized.js', loadCount)">Three.js opt</button>
+  <button type=button onclick="loadScript('three.min.js', loadCount)">Three.js min</button>
+  <button type=button onclick="loadScript('three.min.optimized.js', loadCount)">Three.js min+opt</button>
 </div>
 <div>
 <pre id=display></pre>
 </div>
+
+<div class="gallery" id="immutable">
+    <svg></svg>
+</div>
+<div class="gallery" id="jquery">
+    <svg></svg>
+</div>
+<div class="gallery" id="lodash">
+    <svg></svg>
+</div>
+<div class="gallery" id="ember">
+    <svg></svg>
+</div>
+<div class="gallery" id="pouchdb">
+    <svg></svg>
+</div>
+<div class="gallery" id="three">
+    <svg></svg>
+</div>
+
 <script>
+var boxPlotResults = {
+  'jquery':[],
+  'immutable': [],
+  'lodash': [],
+  'ember': [],
+  'pouchdb': [],
+  'three': [],
+}
+
 function loadScript(src, num, cb) {
   var times = []
   window.__onDone = function (time) {
     times.push(time)
     if (--num > 0) {
-      load();
+      load()
     } else {
-      var median = times.sort(function (left, right) {
-        return left < right ? -1 : 1
-      })[~~(times.length / 2)];
+      var stats = window.jStat(times)
+      var median = stats.median()
       if (cb) {
-        cb(median)
+        cb(stats)
       } else {
-        display.innerHTML += median + 'ms\n'
+        var parts = src.split('.')
+        scriptName = parts[0]
+        addToBoxplotResult({
+          script: scriptName,
+          fullName: src,
+          type: '.'+parts.slice(1, parts.length).join('.'),
+          stats: stats
+        })
+        plot(scriptName, boxPlotResults[scriptName])
+        display.innerHTML += getDisplayLine(src, stats)
       }
     }
   }
@@ -112,34 +181,65 @@ function runAll() {
     var scriptsToTimes = {}
     results.forEach(function (result) {
       scriptsToTimes[result.script] = scriptsToTimes[result.script] || {}
-      scriptsToTimes[result.script][result.type] = result.median
+      scriptsToTimes[result.script][result.type] = result.stats
     })
 
     // format results as markdown
-    var table = '| Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |' +
-      '\n| ---- | ---- | ---- | ---- | ---- | ---- | ---- |'
+    var columns = ['Script', 'Original', 'Optimized', 'Improvement', 'Minified', 'Min+Optimized', 'Improvement']
+    var tableHtml = '<br/>'
+    columns.forEach(function(col){
+      tableHtml += ' ' + col + ' | '
+    })
+    tableHtml += '\n'
+
+    // give proper padding for each column
+    columns.forEach(function(col, idx){
+      tableHtml += ' ' + ('--------------').slice(-col.length) + ' | '
+    })
+    tableHtml += '\n'
+
     var totalUnopt = 0
     var totalOpt = 0
     Object.keys(scriptsToTimes).forEach(function (script) {
       var times = scriptsToTimes[script]
-      var jsTime = times['.js']
-      var optTime = times['.optimized.js']
-      var minTime = times['.min.js']
-      var minOptTime = times['.min.optimized.js']
+      var jsTime = times['.js'].median()
+      var optTime = times['.optimized.js'].median()
+      var minTime = times['.min.js'].median()
+      var minOptTime = times['.min.optimized.js'].median()
       totalUnopt += jsTime + minTime
       totalOpt += optTime + minOptTime
-      table += '\n| ' + [
-        scriptNames[script],
-        jsTime.toFixed(2) + 'ms',
-        optTime.toFixed(2) + 'ms',
-        '**' + (100 * (jsTime - optTime) / jsTime).toFixed(2) + '%**',
-        minTime.toFixed(2) + 'ms',
-        minOptTime.toFixed(2) + 'ms',
-        '**' + (100 * (minTime - minOptTime) / minTime).toFixed(2) + '%**'
-      ].join(' | ') + ' |'
+
+      var padLeft = function(val, padLength){
+        return ('          ' + val).slice(-padLength);
+      }
+      columns.forEach(function(col, idx){
+        switch (idx) {
+          case 0:
+            tableHtml += ' ' + padLeft(scriptNames[script], col.length) + ' | '
+            break
+          case 1:
+            tableHtml += ' ' + padLeft(jsTime.toFixed(2), col.length) + ' | '
+            break
+          case 2:
+            tableHtml += ' ' + padLeft(optTime.toFixed(2), col.length) + ' | '
+            break
+          case 3:
+            tableHtml += ' ' + padLeft('**' + (100 * (jsTime - optTime) / jsTime).toFixed(2) + '%**', col.length) + ' | '
+            break
+          case 4:
+            tableHtml += ' ' + padLeft(minTime.toFixed(2) + 'ms', col.length) + ' | '
+            break
+          case 5:
+            tableHtml += ' ' + padLeft(minOptTime.toFixed(2) + 'ms', col.length) + ' | '
+            break
+          case 6:
+            tableHtml += ' ' + padLeft('**' + (100 * (minTime - minOptTime) / minTime).toFixed(2) + '%**', col.length) + ' |\n'
+            break
+        }
+      })     
     })
 
-    display.innerHTML += table
+    display.innerHTML += tableHtml
     display.innerHTML += '\nOverall improvement: **' +
         (100 * (totalUnopt - totalOpt) / totalUnopt).toFixed(2) + '%**'
   }
@@ -164,18 +264,92 @@ function runAll() {
         type = '.min.optimized.js'
         break
     }
-    loadScript(script + type, 251, function (median) {
-      results.push({
+
+    loadScript(script + type, window.loadCount, function (stats) {
+      var median = stats.median()
+      var scriptName = script
+      var newData = {
         script: script,
+        fullName: script + type,
         type: type,
-        median: median
-      })
-      display.innerHTML += script + type + ': ' + median.toFixed(2) + 'ms\n'
+        stats: stats
+      }
+      results.push(newData)
+      display.innerHTML += getDisplayLine(script+type, stats)
+
+      // add data if not already in the boxPlotResults
+      addToBoxplotResult(newData)
+      plot(scriptName, boxPlotResults[scriptName])
+
       next()
     })
   }
   next()
 }
+
+function getDisplayLine(name, stats){
+  return name + ' => median: ' + stats.median().toFixed(2) + 'ms, avg: ' + stats.mean().toFixed(2) + '&plusmn;' + stats.stdev().toFixed(2) + 'ms\n'
+}
+
+function addToBoxplotResult(result){
+  var fullName = result.fullName
+  var found = false
+  // remove existing data so that only latest data is plotted
+  boxPlotResults[result.script].forEach(function(obj, idx){
+    if (obj.label === fullName) {
+      boxPlotResults[result.script].splice(idx, 1)
+    }
+  })
+  boxPlotResults[result.script].push({
+      label: fullName,
+      values: {
+        Q1: result.stats.quartiles()[0].toFixed(2),
+        Q2: result.stats.quartiles()[1].toFixed(2),
+        Q3: result.stats.quartiles()[2].toFixed(2),
+        whisker_low: result.stats.min().toFixed(2),
+        whisker_high: result.stats.max().toFixed(2)
+      }
+  })
+}
+
+// Plot boxplot
+function plot(script, data){
+  document.getElementById(script).style.display = 'block'
+
+  var min = 99999;
+  var max = -99999;
+
+  // get whisker values.
+  data.forEach(function(obj){
+    min = min > obj.values.whisker_low ? obj.values.whisker_low : min
+    max = max < obj.values.whisker_high ? obj.values.whisker_high : max
+  })
+
+  nv.addGraph(function() {
+    var chart = nv.models.boxPlotChart()
+        .x(function(d) { return d.label })
+        .staggerLabels(true)
+        .maxBoxWidth(75) // prevent boxes from being incredibly wide
+        .yDomain([min, max])
+
+    d3.select('#' + script + ' svg')
+        .datum(data)
+        .call(chart)
+
+    nv.utils.windowResize(chart.update);
+
+    // Add chart header
+    var element = document.getElementById(script)
+    if (element.firstChild.nodeName !== 'H3') {
+      var header = document.createElement('H3')
+      header.innerText = 'Metrics for ' + script + ' (time in ms)'
+      element.insertBefore(header, element.firstChild)
+    }
+
+    return chart
+  })
+}
+
 </script>
 </body>
 </html>
