@@ -244,6 +244,7 @@ Plugins
 
 * [Grunt plugin for optimize-js](https://github.com/sergejmueller/grunt-optimize-js)
 * [Gulp plugin for optimize-js](https://github.com/prateekbh/gulp-optimize-js)
+* [Webpack plugin for optimize-js](https://github.com/vigneshshanmugam/optimize-js-plugin)
 
 See also
 ---
