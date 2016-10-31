@@ -32,6 +32,12 @@ npm run benchmark</code></pre>
   <button type=button onclick="runAll()">Run all</button>
 </div>
 <div>
+  <button type=button onclick="loadScript('create-react-app.js', 251)">Create React App</button>
+  <button type=button onclick="loadScript('create-react-app.optimized.js', 251)">Create React App opt</button>
+  <button type=button onclick="loadScript('create-react-app.min.js', 251)">Create React App min</button>
+  <button type=button onclick="loadScript('create-react-app.min.optimized.js', 251)">Create React App min+opt</button>
+</div>
+<div>
   <button type=button onclick="loadScript('immutable.js', 251)">Immutable</button>
   <button type=button onclick="loadScript('immutable.optimized.js', 251)">Immutable opt</button>
   <button type=button onclick="loadScript('immutable.min.js', 251)">Immutable min</button>
@@ -97,17 +103,18 @@ function loadScript(src, num, cb) {
 }
 function runAll() {
   var results = []
-  var scripts = ['immutable', 'jquery', 'lodash', 'ember', 'pouchdb', 'three']
+  var scripts = ['create-react-app', 'immutable', 'jquery', 'lodash', 'ember', 'pouchdb', 'three']
   var i = -1
 
   function done () {
     var scriptNames = {
+      'create-react-app': 'Create React App',
       immutable: 'ImmutableJS',
       'jquery': 'jQuery',
       'lodash': 'Lodash',
       'ember': 'Ember',
       'pouchdb': 'PouchDB',
-      'three': 'ThreeJS'
+      'three': 'ThreeJS',
     }
     var scriptsToTimes = {}
     results.forEach(function (result) {
