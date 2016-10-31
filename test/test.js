@@ -7,7 +7,7 @@ var assert = require('assert')
 var testCases = fs.readdirSync('test/cases')
 var benchmarkLibs = fs.readdirSync('benchmarks').filter(function (script) {
   return script.indexOf('.min') === -1 &&
-    script.indexOf('.optimized' === -1) &&
+    script.indexOf('.optimized') === -1 &&
     script.indexOf('.js') !== -1
 })
 
