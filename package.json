@@ -1,6 +1,6 @@
 {
   "name": "optimize-js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Optimize initial JavaScript execution/parsing by wrapping eager functions",
   "main": "lib/index.js",
   "scripts": {
@@ -23,8 +23,8 @@
   "dependencies": {
     "acorn": "^3.3.0",
     "concat-stream": "^1.5.1",
+    "estree-walker": "^0.3.0",
     "magic-string": "^0.16.0",
-    "walk-ast": "^0.0.2",
     "yargs": "^4.8.1"
   },
   "devDependencies": {
