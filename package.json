@@ -4,7 +4,7 @@
   "description": "Optimize initial JavaScript execution/parsing by wrapping eager functions",
   "main": "lib/index.js",
   "scripts": {
-    "test": "standard && mocha test/test.js",
+    "test": "standard && mocha --timeout 60000 test/test.js",
     "benchmark": "npm run build-benchmark && hs -p 9090 benchmarks",
     "build-benchmark": "sh bin/build-benchmark.sh",
     "publish-benchmark": "sh bin/publish-benchmark.sh",
