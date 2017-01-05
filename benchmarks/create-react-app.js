@@ -1,4 +1,3 @@
-var __start = performance.now();
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -21713,5 +21712,3 @@ var __start = performance.now();
 
 /***/ }
 /******/ ])));
-var __end = performance.now();
-__onDone(__end - __start);

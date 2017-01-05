@@ -19,15 +19,8 @@ body {
 </head>
 <body>
 <a href="https://github.com/nolanlawson/optimize-js"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
-<h1>optimize-js benchmark</h1>
+<h1>optimize-js benchmark v1.0.3</h1>
 <p>All tests are median of 251.</p>
-<p>This benchmark runs <em>way</em> faster if you run it locally:</p>
-<p>
-<pre><code>git clone https://github.com/nolanlawson/optimize-js.git
-cd optimize-js
-npm install
-npm run benchmark</code></pre>
-</p>
 <div>
   <button type=button onclick="runAll()">Run all</button>
 </div>
@@ -56,12 +49,6 @@ npm run benchmark</code></pre>
   <button type=button onclick="loadScript('lodash.min.optimized.js', 251)">Lodash min+opt</button>
 </div>
 <div>
-  <button type=button onclick="loadScript('ember.js', 251)">Ember</button>
-  <button type=button onclick="loadScript('ember.optimized.js', 251)">Ember opt</button>
-  <button type=button onclick="loadScript('ember.min.js', 251)">Ember min</button>
-  <button type=button onclick="loadScript('ember.min.optimized.js', 251)">Ember min+opt</button>
-</div>
-<div>
   <button type=button onclick="loadScript('pouchdb.js', 251)">PouchDB</button>
   <button type=button onclick="loadScript('pouchdb.optimized.js', 25)">PouchDB opt</button>
   <button type=button onclick="loadScript('pouchdb.min.js', 251)">PouchDB min</button>
@@ -77,112 +64,156 @@ npm run benchmark</code></pre>
 <pre id=display></pre>
 </div>
 <script>
-function loadScript(src, num, cb) {
-  var times = []
-  window.__onDone = function (time) {
-    times.push(time)
-    if (--num > 0) {
-      load();
-    } else {
-      var median = times.sort(function (left, right) {
-        return left < right ? -1 : 1
-      })[~~(times.length / 2)];
-      if (cb) {
-        cb(median)
+// marky.js v1.1.1
+!function(r){"use strict";function e(r){if(!r)throw new Error("name must be non-empty")}function n(r,e){for(var n,t=0,a=r.length;t<a;)n=t+a>>>1,r[n].startTime<e.startTime?t=n+1:a=n;r.splice(t,0,e)}var t;t="undefined"!=typeof performance&&performance.now?function(){return performance.now()}:function(){return Date.now()};var a=t;if("undefined"!=typeof performance&&performance.mark&&performance.measure)r.mark=function(r){e(r),performance.mark("start "+r)},r.stop=function(r){e(r),performance.mark("end "+r),performance.measure(r,"start "+r,"end "+r);var n=performance.getEntriesByName(r);return n[n.length-1]},r.getEntries=function(){return performance.getEntriesByType("measure")};else{var o={},m=[];r.mark=function(r){var n=a();e(r),o["$"+r]=n},r.stop=function(r){var t=a();e(r);var f=o["$"+r];if(!f)throw new Error("no known mark: "+r);var i={startTime:f,name:r,duration:t-f,entryType:"measure"};return n(m,i),i},r.getEntries=function(){return m}}}(this.marky=this.marky||{});
+</script>
+<script>
+(function () {
+
+  var originalWindowKeys;
+
+  if (typeof performance !== 'undefined' && performance.setResourceTimingBufferSize) {
+    // need this for marky to work properly in Firefox, keeps more performance
+    // entries around since Firefox's limit is 150 otherwise
+    performance.setResourceTimingBufferSize(100000)
+  }
+
+  function cleanupScript() {
+    // if the script added keys to the window, remove them to avoid
+    // memory leaks
+    Object.keys(window).forEach(function (key) {
+      if (!~originalWindowKeys.indexOf(key)) {
+        delete window[key]
+      }
+    })
+    // remove the last script element entirely
+    document.body.removeChild(document.querySelector('body script:last-child'))
+  }
+
+  function loadScript (src, num, cb) {
+    var times = []
+    window.__onDone = function (entry) {
+      times.push(entry.duration)
+      cleanupScript()
+      if (--num > 0) {
+        load();
       } else {
-        display.innerHTML += median + 'ms\n'
+        var median = times.sort(function (left, right) {
+          return left < right ? -1 : 1
+        })[~~(times.length / 2)];
+        if (cb) {
+          cb(median)
+        } else {
+          display.innerHTML += median + 'ms\n'
+        }
       }
     }
-  }
-  function load() {
-    var script = document.createElement('script')
-    script.src = src + '?q=' + Math.random()
-    document.body.appendChild(script)
-  }
-  load()
-}
-function runAll() {
-  var results = []
-  var scripts = ['create-react-app', 'immutable', 'jquery', 'lodash', 'ember', 'pouchdb', 'three']
-  var i = -1
-
-  function done () {
-    var scriptNames = {
-      'create-react-app': 'Create React App',
-      immutable: 'ImmutableJS',
-      'jquery': 'jQuery',
-      'lodash': 'Lodash',
-      'ember': 'Ember',
-      'pouchdb': 'PouchDB',
-      'three': 'ThreeJS',
+    function load () {
+      originalWindowKeys = Object.keys(window)
+      // adding a random value to the script text prevents Chrome from
+      // caching the parsed/JITed script. we also use this as the mark/measure name
+      var rando = 'script_' + btoa(Math.random())
+      var xhr = new XMLHttpRequest()
+      xhr.onload = function () {
+        var scriptText = xhr.responseText +  ';__onDone(marky.stop("' + rando + '"))'
+        var scriptEl = document.createElement('script')
+        scriptEl.textContent = scriptText
+        marky.mark(rando)
+        document.body.appendChild(scriptEl)
+      }
+      xhr.open('GET', src)
+      xhr.send()
     }
-    var scriptsToTimes = {}
-    results.forEach(function (result) {
-      scriptsToTimes[result.script] = scriptsToTimes[result.script] || {}
-      scriptsToTimes[result.script][result.type] = result.median
-    })
 
-    // format results as markdown
-    var table = '| Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |' +
-      '\n| ---- | ---- | ---- | ---- | ---- | ---- | ---- |'
-    var totalUnopt = 0
-    var totalOpt = 0
-    Object.keys(scriptsToTimes).forEach(function (script) {
-      var times = scriptsToTimes[script]
-      var jsTime = times['.js']
-      var optTime = times['.optimized.js']
-      var minTime = times['.min.js']
-      var minOptTime = times['.min.optimized.js']
-      totalUnopt += jsTime + minTime
-      totalOpt += optTime + minOptTime
-      table += '\n| ' + [
-        scriptNames[script],
-        jsTime.toFixed(2) + 'ms',
-        optTime.toFixed(2) + 'ms',
-        '**' + (100 * (jsTime - optTime) / jsTime).toFixed(2) + '%**',
-        minTime.toFixed(2) + 'ms',
-        minOptTime.toFixed(2) + 'ms',
-        '**' + (100 * (minTime - minOptTime) / minTime).toFixed(2) + '%**'
-      ].join(' | ') + ' |'
-    })
-
-    display.innerHTML += table
-    display.innerHTML += '\nOverall improvement: **' +
-        (100 * (totalUnopt - totalOpt) / totalUnopt).toFixed(2) + '%**'
+    load()
   }
 
-  function next () {
-    if (++i === scripts.length * 4) {
-      return done()
-    }
-    var script = scripts[~~(i / 4)]
-    var type
-    switch (i % 4) {
-      case 0:
-        type = '.js'
-        break
-      case 1:
-        type = '.optimized.js'
-        break
-      case 2:
-        type = '.min.js'
-        break
-      case 3:
-        type = '.min.optimized.js'
-        break
-    }
-    loadScript(script + type, 251, function (median) {
-      results.push({
-        script: script,
-        type: type,
-        median: median
+  function runAll () {
+    var results = []
+    var scripts = ['create-react-app', 'immutable', 'jquery', 'lodash', 'pouchdb', 'three']
+    var i = -1
+
+    function done () {
+      var scriptNames = {
+        'create-react-app': 'Create React App',
+        immutable: 'ImmutableJS',
+        'jquery': 'jQuery',
+        'lodash': 'Lodash',
+        'pouchdb': 'PouchDB',
+        'three': 'ThreeJS',
+      }
+      var scriptsToTimes = {}
+      results.forEach(function (result) {
+        scriptsToTimes[result.script] = scriptsToTimes[result.script] || {}
+        scriptsToTimes[result.script][result.type] = result.median
       })
-      display.innerHTML += script + type + ': ' + median.toFixed(2) + 'ms\n'
-      next()
-    })
+
+      // format results as markdown
+      var table = '| Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |' +
+          '\n| ---- | ---- | ---- | ---- | ---- | ---- | ---- |'
+      var totalUnopt = 0
+      var totalOpt = 0
+      Object.keys(scriptsToTimes).forEach(function (script) {
+        var times = scriptsToTimes[script]
+        var jsTime = times['.js']
+        var optTime = times['.optimized.js']
+        var minTime = times['.min.js']
+        var minOptTime = times['.min.optimized.js']
+        totalUnopt += jsTime + minTime
+        totalOpt += optTime + minOptTime
+        table += '\n| ' + [
+              scriptNames[script],
+              jsTime.toFixed(2) + 'ms',
+              optTime.toFixed(2) + 'ms',
+              '**' + (100 * (jsTime - optTime) / jsTime).toFixed(2) + '%**',
+              minTime.toFixed(2) + 'ms',
+              minOptTime.toFixed(2) + 'ms',
+              '**' + (100 * (minTime - minOptTime) / minTime).toFixed(2) + '%**'
+            ].join(' | ') + ' |'
+      })
+
+      display.innerHTML += table
+      display.innerHTML += '\nOverall improvement: **' +
+          (100 * (totalUnopt - totalOpt) / totalUnopt).toFixed(2) + '%**'
+    }
+
+    function next () {
+      if (++i === scripts.length * 4) {
+        return done()
+      }
+      var script = scripts[~~(i / 4)]
+      var type
+      switch (i % 4) {
+        case 0:
+          type = '.js'
+          break
+        case 1:
+          type = '.optimized.js'
+          break
+        case 2:
+          type = '.min.js'
+          break
+        case 3:
+          type = '.min.optimized.js'
+          break
+      }
+      loadScript(script + type, 251, function (median) {
+        results.push({
+          script: script,
+          type: type,
+          median: median
+        })
+        display.innerHTML += script + type + ': ' + median.toFixed(2) + 'ms\n'
+        next()
+      })
+    }
+
+    next()
   }
-  next()
-}
+
+  window.loadScript = loadScript
+  window.runAll = runAll
+})()
 </script>
 </body>
 </html>

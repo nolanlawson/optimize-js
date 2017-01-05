@@ -1,5 +1,4 @@
-var __start = performance.now();
-// PouchDB 6.1.0-prerelease
+// PouchDB 6.1.0
 // 
 // (c) 2012-2016 Dale Harvey and the PouchDB team
 // PouchDB may be freely distributed under the Apache license, version 2.0.
@@ -26,6 +25,7 @@ function argsArray(fun) {
   };
 }
 },{}],2:[function(_dereq_,module,exports){
+(function (process){
 
 /**
  * This is the web browser implementation of `debug()`.
@@ -67,7 +67,8 @@ exports.colors = [
 
 function useColors() {
   // is webkit? http://stackoverflow.com/a/16459606/376773
-  return ('WebkitAppearance' in document.documentElement.style) ||
+  // document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
+  return (typeof document !== 'undefined' && 'WebkitAppearance' in document.documentElement.style) ||
     // is firebug? http://stackoverflow.com/a/398120/376773
     (window.console && (console.firebug || (console.exception && console.table))) ||
     // is firefox >= v31?
@@ -169,6 +170,12 @@ function load() {
   try {
     r = exports.storage.debug;
   } catch(e) {}
+
+  // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
+  if ('env' in (typeof process === 'undefined' ? {} : process)) {
+    r = process.env.DEBUG;
+  }
+  
   return r;
 }
 
@@ -195,7 +202,8 @@ function localstorage(){
   } catch (e) {}
 }
 
-},{"3":3}],3:[function(_dereq_,module,exports){
+}).call(this,_dereq_(9))
+},{"3":3,"9":9}],3:[function(_dereq_,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -204,12 +212,12 @@ function localstorage(){
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = debug;
+exports = module.exports = debug.debug = debug;
 exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = _dereq_(10);
+exports.humanize = _dereq_(8);
 
 /**
  * The currently active debug mode names, and names to skip.
@@ -281,7 +289,10 @@ function debug(namespace) {
     if (null == self.useColors) self.useColors = exports.useColors();
     if (null == self.color && self.useColors) self.color = selectColor();
 
-    var args = Array.prototype.slice.call(arguments);
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
 
     args[0] = exports.coerce(args[0]);
 
@@ -308,9 +319,9 @@ function debug(namespace) {
       return match;
     });
 
-    if ('function' === typeof exports.formatArgs) {
-      args = exports.formatArgs.apply(self, args);
-    }
+    // apply env-specific formatting
+    args = exports.formatArgs.apply(self, args);
+
     var logFn = enabled.log || exports.log || console.log.bind(console);
     logFn.apply(self, args);
   }
@@ -339,7 +350,7 @@ function enable(namespaces) {
 
   for (var i = 0; i < len; i++) {
     if (!split[i]) continue; // ignore empty strings
-    namespaces = split[i].replace(/\*/g, '.*?');
+    namespaces = split[i].replace(/[\\^$+?.()|[\]{}]/g, '\\$&').replace(/\*/g, '.*?');
     if (namespaces[0] === '-') {
       exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
     } else {
@@ -394,225 +405,7 @@ function coerce(val) {
   return val;
 }
 
-},{"10":10}],4:[function(_dereq_,module,exports){
-(function (root, factory) {
-  /* istanbul ignore next */
-  if (typeof define === 'function' && define.amd) {
-    define([], factory)
-  } else if (typeof exports === 'object') {
-    module.exports = factory()
-  } else {
-    root.PromisePool = factory()
-    // Legacy API
-    root.promisePool = root.PromisePool
-  }
-})(this, function () {
-  'use strict'
-
-  var EventTarget = function () {
-    this._listeners = {}
-  }
-
-  EventTarget.prototype.addEventListener = function (type, listener) {
-    this._listeners[type] = this._listeners[type] || []
-    if (this._listeners[type].indexOf(listener) < 0) {
-      this._listeners[type].push(listener)
-    }
-  }
-
-  EventTarget.prototype.removeEventListener = function (type, listener) {
-    if (this._listeners[type]) {
-      var p = this._listeners[type].indexOf(listener)
-      if (p >= 0) {
-        this._listeners[type].splice(p, 1)
-      }
-    }
-  }
-
-  EventTarget.prototype.dispatchEvent = function (evt) {
-    if (this._listeners[evt.type] && this._listeners[evt.type].length) {
-      var listeners = this._listeners[evt.type].slice()
-      for (var i = 0, l = listeners.length; i < l; ++i) {
-        listeners[i].call(this, evt)
-      }
-    }
-  }
-
-  var isGenerator = function (func) {
-    return (typeof func.constructor === 'function' &&
-      func.constructor.name === 'GeneratorFunction')
-  }
-
-  var functionToIterator = function (func) {
-    return {
-      next: function () {
-        var promise = func()
-        return promise ? {value: promise} : {done: true}
-      }
-    }
-  }
-
-  var promiseToIterator = function (promise) {
-    var called = false
-    return {
-      next: function () {
-        if (called) {
-          return {done: true}
-        }
-        called = true
-        return {value: promise}
-      }
-    }
-  }
-
-  var toIterator = function (obj, Promise) {
-    var type = typeof obj
-    if (type === 'object') {
-      if (typeof obj.next === 'function') {
-        return obj
-      }
-      /* istanbul ignore else */
-      if (typeof obj.then === 'function') {
-        return promiseToIterator(obj)
-      }
-    }
-    if (type === 'function') {
-      return isGenerator(obj) ? obj() : functionToIterator(obj)
-    }
-    return promiseToIterator(Promise.resolve(obj))
-  }
-
-  var PromisePoolEvent = function (target, type, data) {
-    this.target = target
-    this.type = type
-    this.data = data
-  }
-
-  var PromisePool = function (source, concurrency, options) {
-    EventTarget.call(this)
-    if (typeof concurrency !== 'number' ||
-        Math.floor(concurrency) !== concurrency ||
-        concurrency < 1) {
-      throw new Error('Invalid concurrency')
-    }
-    this._concurrency = concurrency
-    this._options = options || {}
-    this._options.promise = this._options.promise || Promise
-    this._iterator = toIterator(source, this._options.promise)
-    this._done = false
-    this._size = 0
-    this._promise = null
-    this._callbacks = null
-  }
-  PromisePool.prototype = new EventTarget()
-  PromisePool.prototype.constructor = PromisePool
-
-  PromisePool.prototype.concurrency = function (value) {
-    if (typeof value !== 'undefined') {
-      this._concurrency = value
-      if (this.active()) {
-        this._proceed()
-      }
-    }
-    return this._concurrency
-  }
-
-  PromisePool.prototype.size = function () {
-    return this._size
-  }
-
-  PromisePool.prototype.active = function () {
-    return !!this._promise
-  }
-
-  PromisePool.prototype.promise = function () {
-    return this._promise
-  }
-
-  PromisePool.prototype.start = function () {
-    var that = this
-    var Promise = this._options.promise
-    this._promise = new Promise(function (resolve, reject) {
-      that._callbacks = {
-        reject: reject,
-        resolve: resolve
-      }
-      that._proceed()
-    })
-    return this._promise
-  }
-
-  PromisePool.prototype._fireEvent = function (type, data) {
-    this.dispatchEvent(new PromisePoolEvent(this, type, data))
-  }
-
-  PromisePool.prototype._settle = function (error) {
-    if (error) {
-      this._callbacks.reject(error)
-    } else {
-      this._callbacks.resolve()
-    }
-    this._promise = null
-    this._callbacks = null
-  }
-
-  PromisePool.prototype._onPooledPromiseFulfilled = function (promise, result) {
-    this._size--
-    if (this.active()) {
-      this._fireEvent('fulfilled', {
-        promise: promise,
-        result: result
-      })
-      this._proceed()
-    }
-  }
-
-  PromisePool.prototype._onPooledPromiseRejected = function (promise, error) {
-    this._size--
-    if (this.active()) {
-      this._fireEvent('rejected', {
-        promise: promise,
-        error: error
-      })
-      this._settle(error || new Error('Unknown error'))
-    }
-  }
-
-  PromisePool.prototype._trackPromise = function (promise) {
-    var that = this
-    promise
-      .then(function (result) {
-        that._onPooledPromiseFulfilled(promise, result)
-      }, function (error) {
-        that._onPooledPromiseRejected(promise, error)
-      })['catch'](function (err) {
-        that._settle(new Error('Promise processing failed: ' + err))
-      })
-  }
-
-  PromisePool.prototype._proceed = function () {
-    if (!this._done) {
-      var result = null
-      while (this._size < this._concurrency &&
-          !(result = this._iterator.next()).done) {
-        this._size++
-        this._trackPromise(result.value)
-      }
-      this._done = (result === null || !!result.done)
-    }
-    if (this._done && this._size === 0) {
-      this._settle()
-    }
-  }
-
-  PromisePool.PromisePoolEvent = PromisePoolEvent
-  // Legacy API
-  PromisePool.PromisePool = PromisePool
-
-  return PromisePool
-})
-
-},{}],5:[function(_dereq_,module,exports){
+},{"8":8}],4:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -916,7 +709,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],6:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 (function (global){
 'use strict';
 var Mutation = global.MutationObserver || global.WebKitMutationObserver;
@@ -989,7 +782,7 @@ function immediate(task) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],7:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1014,35 +807,9 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],8:[function(_dereq_,module,exports){
-  var slice   = Array.prototype.slice,
-      each    = Array.prototype.forEach;
-
-  var extend = function(obj) {
-    if(typeof obj !== 'object') throw obj + ' is not an object' ;
-
-    var sources = slice.call(arguments, 1); 
-
-    each.call(sources, function(source) {
-      if(source) {
-        for(var prop in source) {
-          if(typeof source[prop] === 'object' && obj[prop]) {
-            extend.call(obj, obj[prop], source[prop]);
-          } else {
-            obj[prop] = source[prop];
-          }
-        } 
-      }
-    });
-
-    return obj;
-  }
-
-  exports.extend = extend;
-
-},{}],9:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 'use strict';
-var immediate = _dereq_(6);
+var immediate = _dereq_(5);
 
 /* istanbul ignore next */
 function INTERNAL() {}
@@ -1295,16 +1062,16 @@ function race(iterable) {
   }
 }
 
-},{"6":6}],10:[function(_dereq_,module,exports){
+},{"5":5}],8:[function(_dereq_,module,exports){
 /**
  * Helpers.
  */
 
-var s = 1000;
-var m = s * 60;
-var h = m * 60;
-var d = h * 24;
-var y = d * 365.25;
+var s = 1000
+var m = s * 60
+var h = m * 60
+var d = h * 24
+var y = d * 365.25
 
 /**
  * Parse or format the given `val`.
@@ -1315,17 +1082,23 @@ var y = d * 365.25;
  *
  * @param {String|Number} val
  * @param {Object} options
+ * @throws {Error} throw an error if val is not a non-empty string or a number
  * @return {String|Number}
  * @api public
  */
 
-module.exports = function(val, options){
-  options = options || {};
-  if ('string' == typeof val) return parse(val);
-  return options.long
-    ? long(val)
-    : short(val);
-};
+module.exports = function (val, options) {
+  options = options || {}
+  var type = typeof val
+  if (type === 'string' && val.length > 0) {
+    return parse(val)
+  } else if (type === 'number' && isNaN(val) === false) {
+    return options.long ?
+			fmtLong(val) :
+			fmtShort(val)
+  }
+  throw new Error('val is not a non-empty string or a valid number. val=' + JSON.stringify(val))
+}
 
 /**
  * Parse the given `str` and return milliseconds.
@@ -1336,47 +1109,53 @@ module.exports = function(val, options){
  */
 
 function parse(str) {
-  str = '' + str;
-  if (str.length > 10000) return;
-  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str);
-  if (!match) return;
-  var n = parseFloat(match[1]);
-  var type = (match[2] || 'ms').toLowerCase();
+  str = String(str)
+  if (str.length > 10000) {
+    return
+  }
+  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str)
+  if (!match) {
+    return
+  }
+  var n = parseFloat(match[1])
+  var type = (match[2] || 'ms').toLowerCase()
   switch (type) {
     case 'years':
     case 'year':
     case 'yrs':
     case 'yr':
     case 'y':
-      return n * y;
+      return n * y
     case 'days':
     case 'day':
     case 'd':
-      return n * d;
+      return n * d
     case 'hours':
     case 'hour':
     case 'hrs':
     case 'hr':
     case 'h':
-      return n * h;
+      return n * h
     case 'minutes':
     case 'minute':
     case 'mins':
     case 'min':
     case 'm':
-      return n * m;
+      return n * m
     case 'seconds':
     case 'second':
     case 'secs':
     case 'sec':
     case 's':
-      return n * s;
+      return n * s
     case 'milliseconds':
     case 'millisecond':
     case 'msecs':
     case 'msec':
     case 'ms':
-      return n;
+      return n
+    default:
+      return undefined
   }
 }
 
@@ -1388,12 +1167,20 @@ function parse(str) {
  * @api private
  */
 
-function short(ms) {
-  if (ms >= d) return Math.round(ms / d) + 'd';
-  if (ms >= h) return Math.round(ms / h) + 'h';
-  if (ms >= m) return Math.round(ms / m) + 'm';
-  if (ms >= s) return Math.round(ms / s) + 's';
-  return ms + 'ms';
+function fmtShort(ms) {
+  if (ms >= d) {
+    return Math.round(ms / d) + 'd'
+  }
+  if (ms >= h) {
+    return Math.round(ms / h) + 'h'
+  }
+  if (ms >= m) {
+    return Math.round(ms / m) + 'm'
+  }
+  if (ms >= s) {
+    return Math.round(ms / s) + 's'
+  }
+  return ms + 'ms'
 }
 
 /**
@@ -1404,12 +1191,12 @@ function short(ms) {
  * @api private
  */
 
-function long(ms) {
-  return plural(ms, d, 'day')
-    || plural(ms, h, 'hour')
-    || plural(ms, m, 'minute')
-    || plural(ms, s, 'second')
-    || ms + ' ms';
+function fmtLong(ms) {
+  return plural(ms, d, 'day') ||
+    plural(ms, h, 'hour') ||
+    plural(ms, m, 'minute') ||
+    plural(ms, s, 'second') ||
+    ms + ' ms'
 }
 
 /**
@@ -1417,12 +1204,16 @@ function long(ms) {
  */
 
 function plural(ms, n, name) {
-  if (ms < n) return;
-  if (ms < n * 1.5) return Math.floor(ms / n) + ' ' + name;
-  return Math.ceil(ms / n) + ' ' + name + 's';
+  if (ms < n) {
+    return
+  }
+  if (ms < n * 1.5) {
+    return Math.floor(ms / n) + ' ' + name
+  }
+  return Math.ceil(ms / n) + ' ' + name + 's'
 }
 
-},{}],11:[function(_dereq_,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -1604,7 +1395,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],12:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 // Generated by CoffeeScript 1.9.2
 (function() {
   var hasProp = {}.hasOwnProperty,
@@ -1628,7 +1419,7 @@ process.umask = function() { return 0; };
 
 }).call(this);
 
-},{}],13:[function(_dereq_,module,exports){
+},{}],11:[function(_dereq_,module,exports){
 (function (factory) {
     if (typeof exports === 'object') {
         // Node/CommonJS
@@ -1676,100 +1467,148 @@ process.umask = function() { return 0; };
         return add32((a << s) | (a >>> (32 - s)), b);
     }
 
-    function ff(a, b, c, d, x, s, t) {
-        return cmn((b & c) | ((~b) & d), a, b, x, s, t);
-    }
-
-    function gg(a, b, c, d, x, s, t) {
-        return cmn((b & d) | (c & (~d)), a, b, x, s, t);
-    }
-
-    function hh(a, b, c, d, x, s, t) {
-        return cmn(b ^ c ^ d, a, b, x, s, t);
-    }
-
-    function ii(a, b, c, d, x, s, t) {
-        return cmn(c ^ (b | (~d)), a, b, x, s, t);
-    }
-
     function md5cycle(x, k) {
         var a = x[0],
             b = x[1],
             c = x[2],
             d = x[3];
 
-        a = ff(a, b, c, d, k[0], 7, -680876936);
-        d = ff(d, a, b, c, k[1], 12, -389564586);
-        c = ff(c, d, a, b, k[2], 17, 606105819);
-        b = ff(b, c, d, a, k[3], 22, -1044525330);
-        a = ff(a, b, c, d, k[4], 7, -176418897);
-        d = ff(d, a, b, c, k[5], 12, 1200080426);
-        c = ff(c, d, a, b, k[6], 17, -1473231341);
-        b = ff(b, c, d, a, k[7], 22, -45705983);
-        a = ff(a, b, c, d, k[8], 7, 1770035416);
-        d = ff(d, a, b, c, k[9], 12, -1958414417);
-        c = ff(c, d, a, b, k[10], 17, -42063);
-        b = ff(b, c, d, a, k[11], 22, -1990404162);
-        a = ff(a, b, c, d, k[12], 7, 1804603682);
-        d = ff(d, a, b, c, k[13], 12, -40341101);
-        c = ff(c, d, a, b, k[14], 17, -1502002290);
-        b = ff(b, c, d, a, k[15], 22, 1236535329);
+        a += (b & c | ~b & d) + k[0] - 680876936 | 0;
+        a  = (a << 7 | a >>> 25) + b | 0;
+        d += (a & b | ~a & c) + k[1] - 389564586 | 0;
+        d  = (d << 12 | d >>> 20) + a | 0;
+        c += (d & a | ~d & b) + k[2] + 606105819 | 0;
+        c  = (c << 17 | c >>> 15) + d | 0;
+        b += (c & d | ~c & a) + k[3] - 1044525330 | 0;
+        b  = (b << 22 | b >>> 10) + c | 0;
+        a += (b & c | ~b & d) + k[4] - 176418897 | 0;
+        a  = (a << 7 | a >>> 25) + b | 0;
+        d += (a & b | ~a & c) + k[5] + 1200080426 | 0;
+        d  = (d << 12 | d >>> 20) + a | 0;
+        c += (d & a | ~d & b) + k[6] - 1473231341 | 0;
+        c  = (c << 17 | c >>> 15) + d | 0;
+        b += (c & d | ~c & a) + k[7] - 45705983 | 0;
+        b  = (b << 22 | b >>> 10) + c | 0;
+        a += (b & c | ~b & d) + k[8] + 1770035416 | 0;
+        a  = (a << 7 | a >>> 25) + b | 0;
+        d += (a & b | ~a & c) + k[9] - 1958414417 | 0;
+        d  = (d << 12 | d >>> 20) + a | 0;
+        c += (d & a | ~d & b) + k[10] - 42063 | 0;
+        c  = (c << 17 | c >>> 15) + d | 0;
+        b += (c & d | ~c & a) + k[11] - 1990404162 | 0;
+        b  = (b << 22 | b >>> 10) + c | 0;
+        a += (b & c | ~b & d) + k[12] + 1804603682 | 0;
+        a  = (a << 7 | a >>> 25) + b | 0;
+        d += (a & b | ~a & c) + k[13] - 40341101 | 0;
+        d  = (d << 12 | d >>> 20) + a | 0;
+        c += (d & a | ~d & b) + k[14] - 1502002290 | 0;
+        c  = (c << 17 | c >>> 15) + d | 0;
+        b += (c & d | ~c & a) + k[15] + 1236535329 | 0;
+        b  = (b << 22 | b >>> 10) + c | 0;
 
-        a = gg(a, b, c, d, k[1], 5, -165796510);
-        d = gg(d, a, b, c, k[6], 9, -1069501632);
-        c = gg(c, d, a, b, k[11], 14, 643717713);
-        b = gg(b, c, d, a, k[0], 20, -373897302);
-        a = gg(a, b, c, d, k[5], 5, -701558691);
-        d = gg(d, a, b, c, k[10], 9, 38016083);
-        c = gg(c, d, a, b, k[15], 14, -660478335);
-        b = gg(b, c, d, a, k[4], 20, -405537848);
-        a = gg(a, b, c, d, k[9], 5, 568446438);
-        d = gg(d, a, b, c, k[14], 9, -1019803690);
-        c = gg(c, d, a, b, k[3], 14, -187363961);
-        b = gg(b, c, d, a, k[8], 20, 1163531501);
-        a = gg(a, b, c, d, k[13], 5, -1444681467);
-        d = gg(d, a, b, c, k[2], 9, -51403784);
-        c = gg(c, d, a, b, k[7], 14, 1735328473);
-        b = gg(b, c, d, a, k[12], 20, -1926607734);
+        a += (b & d | c & ~d) + k[1] - 165796510 | 0;
+        a  = (a << 5 | a >>> 27) + b | 0;
+        d += (a & c | b & ~c) + k[6] - 1069501632 | 0;
+        d  = (d << 9 | d >>> 23) + a | 0;
+        c += (d & b | a & ~b) + k[11] + 643717713 | 0;
+        c  = (c << 14 | c >>> 18) + d | 0;
+        b += (c & a | d & ~a) + k[0] - 373897302 | 0;
+        b  = (b << 20 | b >>> 12) + c | 0;
+        a += (b & d | c & ~d) + k[5] - 701558691 | 0;
+        a  = (a << 5 | a >>> 27) + b | 0;
+        d += (a & c | b & ~c) + k[10] + 38016083 | 0;
+        d  = (d << 9 | d >>> 23) + a | 0;
+        c += (d & b | a & ~b) + k[15] - 660478335 | 0;
+        c  = (c << 14 | c >>> 18) + d | 0;
+        b += (c & a | d & ~a) + k[4] - 405537848 | 0;
+        b  = (b << 20 | b >>> 12) + c | 0;
+        a += (b & d | c & ~d) + k[9] + 568446438 | 0;
+        a  = (a << 5 | a >>> 27) + b | 0;
+        d += (a & c | b & ~c) + k[14] - 1019803690 | 0;
+        d  = (d << 9 | d >>> 23) + a | 0;
+        c += (d & b | a & ~b) + k[3] - 187363961 | 0;
+        c  = (c << 14 | c >>> 18) + d | 0;
+        b += (c & a | d & ~a) + k[8] + 1163531501 | 0;
+        b  = (b << 20 | b >>> 12) + c | 0;
+        a += (b & d | c & ~d) + k[13] - 1444681467 | 0;
+        a  = (a << 5 | a >>> 27) + b | 0;
+        d += (a & c | b & ~c) + k[2] - 51403784 | 0;
+        d  = (d << 9 | d >>> 23) + a | 0;
+        c += (d & b | a & ~b) + k[7] + 1735328473 | 0;
+        c  = (c << 14 | c >>> 18) + d | 0;
+        b += (c & a | d & ~a) + k[12] - 1926607734 | 0;
+        b  = (b << 20 | b >>> 12) + c | 0;
 
-        a = hh(a, b, c, d, k[5], 4, -378558);
-        d = hh(d, a, b, c, k[8], 11, -2022574463);
-        c = hh(c, d, a, b, k[11], 16, 1839030562);
-        b = hh(b, c, d, a, k[14], 23, -35309556);
-        a = hh(a, b, c, d, k[1], 4, -1530992060);
-        d = hh(d, a, b, c, k[4], 11, 1272893353);
-        c = hh(c, d, a, b, k[7], 16, -155497632);
-        b = hh(b, c, d, a, k[10], 23, -1094730640);
-        a = hh(a, b, c, d, k[13], 4, 681279174);
-        d = hh(d, a, b, c, k[0], 11, -358537222);
-        c = hh(c, d, a, b, k[3], 16, -722521979);
-        b = hh(b, c, d, a, k[6], 23, 76029189);
-        a = hh(a, b, c, d, k[9], 4, -640364487);
-        d = hh(d, a, b, c, k[12], 11, -421815835);
-        c = hh(c, d, a, b, k[15], 16, 530742520);
-        b = hh(b, c, d, a, k[2], 23, -995338651);
+        a += (b ^ c ^ d) + k[5] - 378558 | 0;
+        a  = (a << 4 | a >>> 28) + b | 0;
+        d += (a ^ b ^ c) + k[8] - 2022574463 | 0;
+        d  = (d << 11 | d >>> 21) + a | 0;
+        c += (d ^ a ^ b) + k[11] + 1839030562 | 0;
+        c  = (c << 16 | c >>> 16) + d | 0;
+        b += (c ^ d ^ a) + k[14] - 35309556 | 0;
+        b  = (b << 23 | b >>> 9) + c | 0;
+        a += (b ^ c ^ d) + k[1] - 1530992060 | 0;
+        a  = (a << 4 | a >>> 28) + b | 0;
+        d += (a ^ b ^ c) + k[4] + 1272893353 | 0;
+        d  = (d << 11 | d >>> 21) + a | 0;
+        c += (d ^ a ^ b) + k[7] - 155497632 | 0;
+        c  = (c << 16 | c >>> 16) + d | 0;
+        b += (c ^ d ^ a) + k[10] - 1094730640 | 0;
+        b  = (b << 23 | b >>> 9) + c | 0;
+        a += (b ^ c ^ d) + k[13] + 681279174 | 0;
+        a  = (a << 4 | a >>> 28) + b | 0;
+        d += (a ^ b ^ c) + k[0] - 358537222 | 0;
+        d  = (d << 11 | d >>> 21) + a | 0;
+        c += (d ^ a ^ b) + k[3] - 722521979 | 0;
+        c  = (c << 16 | c >>> 16) + d | 0;
+        b += (c ^ d ^ a) + k[6] + 76029189 | 0;
+        b  = (b << 23 | b >>> 9) + c | 0;
+        a += (b ^ c ^ d) + k[9] - 640364487 | 0;
+        a  = (a << 4 | a >>> 28) + b | 0;
+        d += (a ^ b ^ c) + k[12] - 421815835 | 0;
+        d  = (d << 11 | d >>> 21) + a | 0;
+        c += (d ^ a ^ b) + k[15] + 530742520 | 0;
+        c  = (c << 16 | c >>> 16) + d | 0;
+        b += (c ^ d ^ a) + k[2] - 995338651 | 0;
+        b  = (b << 23 | b >>> 9) + c | 0;
 
-        a = ii(a, b, c, d, k[0], 6, -198630844);
-        d = ii(d, a, b, c, k[7], 10, 1126891415);
-        c = ii(c, d, a, b, k[14], 15, -1416354905);
-        b = ii(b, c, d, a, k[5], 21, -57434055);
-        a = ii(a, b, c, d, k[12], 6, 1700485571);
-        d = ii(d, a, b, c, k[3], 10, -1894986606);
-        c = ii(c, d, a, b, k[10], 15, -1051523);
-        b = ii(b, c, d, a, k[1], 21, -2054922799);
-        a = ii(a, b, c, d, k[8], 6, 1873313359);
-        d = ii(d, a, b, c, k[15], 10, -30611744);
-        c = ii(c, d, a, b, k[6], 15, -1560198380);
-        b = ii(b, c, d, a, k[13], 21, 1309151649);
-        a = ii(a, b, c, d, k[4], 6, -145523070);
-        d = ii(d, a, b, c, k[11], 10, -1120210379);
-        c = ii(c, d, a, b, k[2], 15, 718787259);
-        b = ii(b, c, d, a, k[9], 21, -343485551);
+        a += (c ^ (b | ~d)) + k[0] - 198630844 | 0;
+        a  = (a << 6 | a >>> 26) + b | 0;
+        d += (b ^ (a | ~c)) + k[7] + 1126891415 | 0;
+        d  = (d << 10 | d >>> 22) + a | 0;
+        c += (a ^ (d | ~b)) + k[14] - 1416354905 | 0;
+        c  = (c << 15 | c >>> 17) + d | 0;
+        b += (d ^ (c | ~a)) + k[5] - 57434055 | 0;
+        b  = (b << 21 |b >>> 11) + c | 0;
+        a += (c ^ (b | ~d)) + k[12] + 1700485571 | 0;
+        a  = (a << 6 | a >>> 26) + b | 0;
+        d += (b ^ (a | ~c)) + k[3] - 1894986606 | 0;
+        d  = (d << 10 | d >>> 22) + a | 0;
+        c += (a ^ (d | ~b)) + k[10] - 1051523 | 0;
+        c  = (c << 15 | c >>> 17) + d | 0;
+        b += (d ^ (c | ~a)) + k[1] - 2054922799 | 0;
+        b  = (b << 21 |b >>> 11) + c | 0;
+        a += (c ^ (b | ~d)) + k[8] + 1873313359 | 0;
+        a  = (a << 6 | a >>> 26) + b | 0;
+        d += (b ^ (a | ~c)) + k[15] - 30611744 | 0;
+        d  = (d << 10 | d >>> 22) + a | 0;
+        c += (a ^ (d | ~b)) + k[6] - 1560198380 | 0;
+        c  = (c << 15 | c >>> 17) + d | 0;
+        b += (d ^ (c | ~a)) + k[13] + 1309151649 | 0;
+        b  = (b << 21 |b >>> 11) + c | 0;
+        a += (c ^ (b | ~d)) + k[4] - 145523070 | 0;
+        a  = (a << 6 | a >>> 26) + b | 0;
+        d += (b ^ (a | ~c)) + k[11] - 1120210379 | 0;
+        d  = (d << 10 | d >>> 22) + a | 0;
+        c += (a ^ (d | ~b)) + k[2] + 718787259 | 0;
+        c  = (c << 15 | c >>> 17) + d | 0;
+        b += (d ^ (c | ~a)) + k[9] - 343485551 | 0;
+        b  = (b << 21 | b >>> 11) + c | 0;
 
-        x[0] = add32(a, x[0]);
-        x[1] = add32(b, x[1]);
-        x[2] = add32(c, x[2]);
-        x[3] = add32(d, x[3]);
+        x[0] = a + x[0] | 0;
+        x[1] = b + x[1] | 0;
+        x[2] = c + x[2] | 0;
+        x[3] = d + x[3] | 0;
     }
 
     function md5blk(s) {
@@ -2333,7 +2172,7 @@ process.umask = function() { return 0; };
     return SparkMD5;
 }));
 
-},{}],14:[function(_dereq_,module,exports){
+},{}],12:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -2508,81 +2347,24 @@ exports.parse = function (str) {
   }
 };
 
-},{}],15:[function(_dereq_,module,exports){
-(function (process,global){
+},{}],13:[function(_dereq_,module,exports){
+(function (global){
 'use strict';
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var jsExtend = _dereq_(8);
-var debug = _interopDefault(_dereq_(2));
-var inherits = _interopDefault(_dereq_(7));
-var lie = _interopDefault(_dereq_(9));
-var events = _dereq_(5);
+var lie = _interopDefault(_dereq_(7));
 var getArguments = _interopDefault(_dereq_(1));
-var scopedEval = _interopDefault(_dereq_(12));
-var Md5 = _interopDefault(_dereq_(13));
-var vuvuzela = _interopDefault(_dereq_(14));
-var PromisePool = _interopDefault(_dereq_(4));
+var debug = _interopDefault(_dereq_(2));
+var events = _dereq_(4);
+var inherits = _interopDefault(_dereq_(6));
+var immediate = _interopDefault(_dereq_(5));
+var scopedEval = _interopDefault(_dereq_(10));
+var Md5 = _interopDefault(_dereq_(11));
+var vuvuzela = _interopDefault(_dereq_(12));
 
 /* istanbul ignore next */
 var PouchPromise = typeof Promise === 'function' ? Promise : lie;
-
-// based on https://github.com/montagejs/collections
-function mangle(key) {
-  return '$' + key;
-}
-function unmangle(key) {
-  return key.substring(1);
-}
-function _Map() {
-  this.store = {};
-}
-_Map.prototype.get = function (key) {
-  var mangled = mangle(key);
-  return this.store[mangled];
-};
-_Map.prototype.set = function (key, value) {
-  var mangled = mangle(key);
-  this.store[mangled] = value;
-  return true;
-};
-_Map.prototype.has = function (key) {
-  var mangled = mangle(key);
-  return mangled in this.store;
-};
-_Map.prototype["delete"] = function (key) {
-  var mangled = mangle(key);
-  var res = mangled in this.store;
-  delete this.store[mangled];
-  return res;
-};
-_Map.prototype.forEach = function (cb) {
-  var keys = Object.keys(this.store);
-  for (var i = 0, len = keys.length; i < len; i++) {
-    var key = keys[i];
-    var value = this.store[key];
-    key = unmangle(key);
-    cb(value, key);
-  }
-};
-
-function _Set(array) {
-  this.store = new _Map();
-
-  // init with an array
-  if (array && Array.isArray(array)) {
-    for (var i = 0, len = array.length; i < len; i++) {
-      this.add(array[i]);
-    }
-  }
-}
-_Set.prototype.add = function (key) {
-  return this.store.set(key, true);
-};
-_Set.prototype.has = function (key) {
-  return this.store.has(key);
-};
 
 function isBinaryObject(object) {
   return (typeof ArrayBuffer !== 'undefined' && object instanceof ArrayBuffer) ||
@@ -2697,19 +2479,8 @@ function toPromise(func) {
     // Clone arguments
     args = clone(args);
     var self = this;
-    var tempCB =
-      (typeof args[args.length - 1] === 'function') ? args.pop() : false;
     // if the last argument is a function, assume its a callback
-    var usedCB;
-    if (tempCB) {
-      // if it was a callback, create a new callback which calls it,
-      // but do so async so we don't trap any errors
-      usedCB = function (err, resp) {
-        process.nextTick(function () {
-          tempCB(err, resp);
-        });
-      };
-    }
+    var usedCB = (typeof args[args.length - 1] === 'function') ? args.pop() : false;
     var promise = new PouchPromise(function (fulfill, reject) {
       var resp;
       try {
@@ -2802,6 +2573,67 @@ function pick(obj, arr) {
   return res;
 }
 
+// based on https://github.com/montagejs/collections
+function mangle(key) {
+  return '$' + key;
+}
+function unmangle(key) {
+  return key.substring(1);
+}
+function _Map() {
+  this._store = {};
+}
+_Map.prototype.get = function (key) {
+  var mangled = mangle(key);
+  return this._store[mangled];
+};
+_Map.prototype.set = function (key, value) {
+  var mangled = mangle(key);
+  this._store[mangled] = value;
+  return true;
+};
+_Map.prototype.has = function (key) {
+  var mangled = mangle(key);
+  return mangled in this._store;
+};
+_Map.prototype["delete"] = function (key) {
+  var mangled = mangle(key);
+  var res = mangled in this._store;
+  delete this._store[mangled];
+  return res;
+};
+_Map.prototype.forEach = function (cb) {
+  var keys = Object.keys(this._store);
+  for (var i = 0, len = keys.length; i < len; i++) {
+    var key = keys[i];
+    var value = this._store[key];
+    key = unmangle(key);
+    cb(value, key);
+  }
+};
+Object.defineProperty(_Map.prototype, 'size', {
+  get: function () {
+    return Object.keys(this._store).length;
+  }
+});
+
+function _Set(array) {
+  this._store = new _Map();
+
+  // init with an array
+  if (array && Array.isArray(array)) {
+    for (var i = 0, len = array.length; i < len; i++) {
+      this.add(array[i]);
+    }
+  }
+}
+_Set.prototype.add = function (key) {
+  return this._store.set(key, true);
+};
+_Set.prototype.has = function (key) {
+  return this._store.has(key);
+};
+
 // Most browsers throttle concurrent requests at 6, so it's silly
 // to shim _bulk_get by trying to launch potentially hundreds of requests
 // and then letting the majority time out. We can handle this ourselves.
@@ -2822,16 +2654,16 @@ function bulkGet(db, opts, callback) {
   var requests = opts.docs;
 
   // consolidate into one request per doc if possible
-  var requestsById = {};
+  var requestsById = new _Map();
   requests.forEach(function (request) {
-    if (request.id in requestsById) {
-      requestsById[request.id].push(request);
+    if (requestsById.has(request.id)) {
+      requestsById.get(request.id).push(request);
     } else {
-      requestsById[request.id] = [request];
+      requestsById.set(request.id, [request]);
     }
   });
 
-  var numDocs = Object.keys(requestsById).length;
+  var numDocs = requestsById.size;
   var numDone = 0;
   var perDocResults = new Array(numDocs);
 
@@ -2859,7 +2691,10 @@ function bulkGet(db, opts, callback) {
     checkDone();
   }
 
-  var allRequests = Object.keys(requestsById);
+  var allRequests = [];
+  requestsById.forEach(function (value, key) {
+    allRequests.push(key);
+  });
 
   var i = 0;
 
@@ -2878,7 +2713,7 @@ function bulkGet(db, opts, callback) {
   function processBatch(batch, offset) {
     batch.forEach(function (docId, j) {
       var docIdx = offset + j;
-      var docRequests = requestsById[docId];
+      var docRequests = requestsById.get(docId);
 
       // just use the first request as the "template"
       // TODO: The _bulk_get API allows for more subtle use cases than this,
@@ -2907,7 +2742,7 @@ function bulkGet(db, opts, callback) {
       }
 
       // globally-supplied options
-      ['revs', 'attachments', 'binary', 'ajax'].forEach(function (param) {
+      ['revs', 'attachments', 'binary', 'ajax', 'latest'].forEach(function (param) {
         if (param in opts) {
           docOpts[param] = opts[param];
         }
@@ -2953,7 +2788,7 @@ function hasLocalStorage() {
   return hasLocal;
 }
 
-inherits(Changes$1, events.EventEmitter);
+inherits(Changes, events.EventEmitter);
 
 /* istanbul ignore next */
 function attachBrowserEvents(self) {
@@ -2978,13 +2813,13 @@ function attachBrowserEvents(self) {
   }
 }
 
-function Changes$1() {
+function Changes() {
   events.EventEmitter.call(this);
   this._listeners = {};
 
   attachBrowserEvents(this);
 }
-Changes$1.prototype.addListener = function (dbName, id, db, opts) {
+Changes.prototype.addListener = function (dbName, id, db, opts) {
   /* istanbul ignore if */
   if (this._listeners[id]) {
     return;
@@ -3018,9 +2853,7 @@ Changes$1.prototype.addListener = function (dbName, id, db, opts) {
       }
     }).on('complete', function () {
       if (inprogress === 'waiting') {
-        setTimeout(function (){
-          eventFunction();
-        },0);
+        immediate(eventFunction);
       }
       inprogress = false;
     }).on('error', onError);
@@ -3029,7 +2862,7 @@ Changes$1.prototype.addListener = function (dbName, id, db, opts) {
   this.on(dbName, eventFunction);
 };
 
-Changes$1.prototype.removeListener = function (dbName, id) {
+Changes.prototype.removeListener = function (dbName, id) {
   /* istanbul ignore if */
   if (!(id in this._listeners)) {
     return;
@@ -3041,7 +2874,7 @@ Changes$1.prototype.removeListener = function (dbName, id) {
 
 
 /* istanbul ignore next */
-Changes$1.prototype.notifyLocalWindows = function (dbName) {
+Changes.prototype.notifyLocalWindows = function (dbName) {
   //do a useless change on a storage thing
   //in order to get other windows's listeners to activate
   if (isChromeApp()) {
@@ -3051,7 +2884,7 @@ Changes$1.prototype.notifyLocalWindows = function (dbName) {
   }
 };
 
-Changes$1.prototype.notify = function (dbName) {
+Changes.prototype.notify = function (dbName) {
   this.emit(dbName);
   this.notifyLocalWindows(dbName);
 };
@@ -3098,13 +2931,42 @@ function explainError(status, str) {
   guardedConsole('info', 'The above ' + status + ' is totally normal. ' + str);
 }
 
+// forked from
+// https://github.com/vmattos/js-extend/blob/7023fd69a9e9552688086b8b8006b1fcf916a306/extend.js
+// TODO: I don't know why we have two different extend() functions in PouchDB
+
+var slice = Array.prototype.slice;
+var each = Array.prototype.forEach;
+
+function extend$1(obj) {
+  if (typeof obj !== 'object') {
+    throw obj + ' is not an object' ;
+  }
+
+  var sources = slice.call(arguments, 1);
+
+  each.call(sources, function (source) {
+    if (source) {
+      for (var prop in source) {
+        if (typeof source[prop] === 'object' && obj[prop]) {
+          extend$1.call(obj, obj[prop], source[prop]);
+        } else {
+          obj[prop] = source[prop];
+        }
+      }
+    }
+  });
+
+  return obj;
+}
+
 inherits(PouchError, Error);
 
-function PouchError(opts) {
-  Error.call(this, opts.reason);
-  this.status = opts.status;
-  this.name = opts.error;
-  this.message = opts.reason;
+function PouchError(status, error, reason) {
+  Error.call(this, reason);
+  this.status = status;
+  this.name = error;
+  this.message = reason;
   this.error = true;
 }
 
@@ -3117,148 +2979,30 @@ PouchError.prototype.toString = function () {
   });
 };
 
-var UNAUTHORIZED = new PouchError({
-  status: 401,
-  error: 'unauthorized',
-  reason: "Name or password is incorrect."
-});
-
-var MISSING_BULK_DOCS = new PouchError({
-  status: 400,
-  error: 'bad_request',
-  reason: "Missing JSON list of 'docs'"
-});
-
-var MISSING_DOC = new PouchError({
-  status: 404,
-  error: 'not_found',
-  reason: 'missing'
-});
-
-var REV_CONFLICT = new PouchError({
-  status: 409,
-  error: 'conflict',
-  reason: 'Document update conflict'
-});
-
-var INVALID_ID = new PouchError({
-  status: 400,
-  error: 'bad_request',
-  reason: '_id field must contain a string'
-});
-
-var MISSING_ID = new PouchError({
-  status: 412,
-  error: 'missing_id',
-  reason: '_id is required for puts'
-});
-
-var RESERVED_ID = new PouchError({
-  status: 400,
-  error: 'bad_request',
-  reason: 'Only reserved document ids may start with underscore.'
-});
-
-var NOT_OPEN = new PouchError({
-  status: 412,
-  error: 'precondition_failed',
-  reason: 'Database not open'
-});
-
-var UNKNOWN_ERROR = new PouchError({
-  status: 500,
-  error: 'unknown_error',
-  reason: 'Database encountered an unknown error'
-});
-
-var BAD_ARG = new PouchError({
-  status: 500,
-  error: 'badarg',
-  reason: 'Some query argument is invalid'
-});
-
-var INVALID_REQUEST = new PouchError({
-  status: 400,
-  error: 'invalid_request',
-  reason: 'Request was invalid'
-});
-
-var QUERY_PARSE_ERROR = new PouchError({
-  status: 400,
-  error: 'query_parse_error',
-  reason: 'Some query parameter is invalid'
-});
-
-var DOC_VALIDATION = new PouchError({
-  status: 500,
-  error: 'doc_validation',
-  reason: 'Bad special document member'
-});
-
-var BAD_REQUEST = new PouchError({
-  status: 400,
-  error: 'bad_request',
-  reason: 'Something wrong with the request'
-});
-
-var NOT_AN_OBJECT = new PouchError({
-  status: 400,
-  error: 'bad_request',
-  reason: 'Document must be a JSON object'
-});
-
-var DB_MISSING = new PouchError({
-  status: 404,
-  error: 'not_found',
-  reason: 'Database not found'
-});
-
-var IDB_ERROR = new PouchError({
-  status: 500,
-  error: 'indexed_db_went_bad',
-  reason: 'unknown'
-});
-
-var WSQ_ERROR = new PouchError({
-  status: 500,
-  error: 'web_sql_went_bad',
-  reason: 'unknown'
-});
-
-var LDB_ERROR = new PouchError({
-  status: 500,
-  error: 'levelDB_went_went_bad',
-  reason: 'unknown'
-});
-
-var FORBIDDEN = new PouchError({
-  status: 403,
-  error: 'forbidden',
-  reason: 'Forbidden by design doc validate_doc_update function'
-});
-
-var INVALID_REV = new PouchError({
-  status: 400,
-  error: 'bad_request',
-  reason: 'Invalid rev format'
-});
-
-var FILE_EXISTS = new PouchError({
-  status: 412,
-  error: 'file_exists',
-  reason: 'The database could not be created, the file already exists.'
-});
-
-var MISSING_STUB = new PouchError({
-  status: 412,
-  error: 'missing_stub'
-});
-
-var INVALID_URL = new PouchError({
-  status: 413,
-  error: 'invalid_url',
-  reason: 'Provided URL is invalid'
-});
+var UNAUTHORIZED = new PouchError(401, 'unauthorized', "Name or password is incorrect.");
+var MISSING_BULK_DOCS = new PouchError(400, 'bad_request', "Missing JSON list of 'docs'");
+var MISSING_DOC = new PouchError(404, 'not_found', 'missing');
+var REV_CONFLICT = new PouchError(409, 'conflict', 'Document update conflict');
+var INVALID_ID = new PouchError(400, 'bad_request', '_id field must contain a string');
+var MISSING_ID = new PouchError(412, 'missing_id', '_id is required for puts');
+var RESERVED_ID = new PouchError(400, 'bad_request', 'Only reserved document ids may start with underscore.');
+var NOT_OPEN = new PouchError(412, 'precondition_failed', 'Database not open');
+var UNKNOWN_ERROR = new PouchError(500, 'unknown_error', 'Database encountered an unknown error');
+var BAD_ARG = new PouchError(500, 'badarg', 'Some query argument is invalid');
+var INVALID_REQUEST = new PouchError(400, 'invalid_request', 'Request was invalid');
+var QUERY_PARSE_ERROR = new PouchError(400, 'query_parse_error', 'Some query parameter is invalid');
+var DOC_VALIDATION = new PouchError(500, 'doc_validation', 'Bad special document member');
+var BAD_REQUEST = new PouchError(400, 'bad_request', 'Something wrong with the request');
+var NOT_AN_OBJECT = new PouchError(400, 'bad_request', 'Document must be a JSON object');
+var DB_MISSING = new PouchError(404, 'not_found', 'Database not found');
+var IDB_ERROR = new PouchError(500, 'indexed_db_went_bad', 'unknown');
+var WSQ_ERROR = new PouchError(500, 'web_sql_went_bad', 'unknown');
+var LDB_ERROR = new PouchError(500, 'levelDB_went_went_bad', 'unknown');
+var FORBIDDEN = new PouchError(403, 'forbidden', 'Forbidden by design doc validate_doc_update function');
+var INVALID_REV = new PouchError(400, 'bad_request', 'Invalid rev format');
+var FILE_EXISTS = new PouchError(412, 'file_exists', 'The database could not be created, the file already exists.');
+var MISSING_STUB = new PouchError(412, 'missing_stub', 'A pre-existing attachment stub wasn\'t found');
+var INVALID_URL = new PouchError(413, 'invalid_url', 'Provided URL is invalid');
 
 function createError(error, reason) {
   function CustomPouchError(reason) {
@@ -3383,6 +3127,18 @@ function listenerCount(ee, type) {
   return 'listenerCount' in ee ? ee.listenerCount(type) :
                                  events.EventEmitter.listenerCount(ee, type);
 }
+
+// Custom nextTick() shim for browsers. In node, this will just be process.nextTick(). We
+// avoid using process.nextTick() directly because the polyfill is very large and we don't
+// need all of it (see: https://github.com/defunctzombie/node-process).
+// "immediate" 3.0.8 is used by lie, and it's a smaller version of the latest "immediate"
+// package, so it's the one we use.
+// When we use nextTick() in our codebase, we only care about not releasing Zalgo
+// (see: http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony).
+// Microtask vs macrotask doesn't matter to us. So we're free to use the fastest
+// (least latency) option, which is "immediate" due to use of microtasks.
+// All of our nextTicks are isolated to this one function so we can easily swap out one
+// implementation for another.
 
 function parseDesignDocFunctionName(s) {
   if (!s) {
@@ -3971,6 +3727,42 @@ function isLocalId(id) {
   return (/^_local/).test(id);
 }
 
+// returns the current leaf node for a given revision
+function latest(rev, metadata) {
+  var toVisit = metadata.rev_tree.slice();
+  var node;
+  while ((node = toVisit.pop())) {
+    var pos = node.pos;
+    var tree = node.ids;
+    var id = tree[0];
+    var opts = tree[1];
+    var branches = tree[2];
+    var isLeaf = branches.length === 0;
+
+    var history = node.history ? node.history.slice() : [];
+    history.push({id: id, pos: pos, opts: opts});
+
+    if (isLeaf) {
+      for (var i = 0, len = history.length; i < len; i++) {
+        var historyNode = history[i];
+        var historyRev = historyNode.pos + '-' + historyNode.id;
+
+        if (historyRev === rev) {
+          // return the rev of this leaf
+          return pos + '-' + id;
+        }
+      }
+    }
+
+    for (var j = 0, l = branches.length; j < l; j++) {
+      toVisit.push({pos: pos + 1, ids: branches[j], history: history});
+    }
+  }
+
+  /* istanbul ignore next */
+  throw new Error('Unable to resolve latest revision for id ' + metadata.id + ', rev ' + rev);
+}
+
 function evalFilter(input) {
   return scopedEval('"use strict";\nreturn ' + input + ';', {});
 }
@@ -3994,7 +3786,7 @@ function evalView(input) {
   return scopedEval(code, {});
 }
 
-inherits(Changes, events.EventEmitter);
+inherits(Changes$1, events.EventEmitter);
 
 function tryCatchInChangeListener(self, change) {
   // isolate try/catches to avoid V8 deoptimizations
@@ -4005,7 +3797,7 @@ function tryCatchInChangeListener(self, change) {
   }
 }
 
-function Changes(db, opts, callback) {
+function Changes$1(db, opts, callback) {
   events.EventEmitter.call(this);
   var self = this;
   this.db = db;
@@ -4075,7 +3867,7 @@ function Changes(db, opts, callback) {
     self.doChanges(opts);
   }
 }
-Changes.prototype.cancel = function () {
+Changes$1.prototype.cancel = function () {
   this.isCancelled = true;
   if (this.db.taskqueue.isReady) {
     this.emit('cancel');
@@ -4105,7 +3897,7 @@ function processChange(doc, metadata, opts) {
   return change;
 }
 
-Changes.prototype.doChanges = function (opts) {
+Changes$1.prototype.doChanges = function (opts) {
   var self = this;
   var callback = opts.complete;
 
@@ -4169,7 +3961,7 @@ Changes.prototype.doChanges = function (opts) {
   }
 };
 
-Changes.prototype.filterChanges = function (opts) {
+Changes$1.prototype.filterChanges = function (opts) {
   var self = this;
   var callback = opts.complete;
   if (opts.filter === '_view') {
@@ -4232,15 +4024,6 @@ Changes.prototype.filterChanges = function (opts) {
 
 function compare(left, right) {
   return left < right ? -1 : left > right ? 1 : 0;
-}
-
-// returns first element of arr satisfying callback predicate
-function arrayFirst(arr, callback) {
-  for (var i = 0; i < arr.length; i++) {
-    if (callback(arr[i], i) === true) {
-      return arr[i];
-    }
-  }
 }
 
 // Wrapper for functions that call the bulkdocs api with a single doc,
@@ -4325,7 +4108,7 @@ function allDocsKeysQuery(api, opts, callback) {
     offset: opts.skip
   };
   return PouchPromise.all(keys.map(function (key) {
-    var subOpts = jsExtend.extend({key: key, deleted: 'ok'}, opts);
+    var subOpts = extend$1({key: key, deleted: 'ok'}, opts);
     ['limit', 'skip', 'keys'].forEach(function (optKey) {
       delete subOpts[optKey];
     });
@@ -4364,7 +4147,7 @@ function doNextCompaction(self) {
       } else {
         callback(null, res);
       }
-      process.nextTick(function () {
+      immediate(function () {
         self._compactionQueue.shift();
         if (self._compactionQueue.length) {
           doNextCompaction(self);
@@ -4438,6 +4221,9 @@ AbstractPouchDB.prototype.putAttachment =
     type = blob;
     blob = rev;
     rev = null;
+  }
+  if (!type) {
+    guardedConsole('warn', 'Attachment', attachmentId, 'on document', docId, 'is missing content_type');
   }
 
   function createAttachment(doc) {
@@ -4711,15 +4497,27 @@ AbstractPouchDB.prototype.get = adapterFun('get', function (id, opts, cb) {
     if (!count) {
       return cb(null, result);
     }
+
     // order with open_revs is unspecified
     leaves.forEach(function (leaf) {
       self.get(id, {
         rev: leaf,
         revs: opts.revs,
+        latest: opts.latest,
         attachments: opts.attachments
       }, function (err, doc) {
         if (!err) {
-          result.push({ok: doc});
+          // using latest=true can produce duplicates
+          var existing;
+          for (var i = 0, l = result.length; i < l; i++) {
+            if (result[i].ok && result[i].ok._rev === doc._rev) {
+              existing = true;
+              break;
+            }
+          }
+          if (!existing) {
+            result.push({ok: doc});
+          }
         } else {
           result.push({missing: leaf});
         }
@@ -4781,13 +4579,25 @@ AbstractPouchDB.prototype.get = adapterFun('get', function (id, opts, cb) {
     }
 
     if (opts.revs || opts.revs_info) {
-      var paths = rootToLeaf(metadata.rev_tree);
-      var path = arrayFirst(paths, function (arr) {
-        return arr.ids.map(function (x) { return x.id; })
-          .indexOf(doc._rev.split('-')[1]) !== -1;
-      });
+      var splittedRev = doc._rev.split('-');
+      var revNo       = parseInt(splittedRev[0], 10);
+      var revHash     = splittedRev[1];
 
-      var indexOfRev = path.ids.map(function (x) {return x.id; })
+      var paths = rootToLeaf(metadata.rev_tree);
+      var path = null;
+
+      for (var i = 0; i < paths.length; i++) {
+        var currentPath = paths[i];
+        var hashIndex = currentPath.ids.map(function (x) { return x.id; })
+          .indexOf(revHash);
+        var hashFoundAtRevPos = hashIndex === (revNo - 1);
+
+        if (hashFoundAtRevPos || (!path && hashIndex !== -1)) {
+          path = currentPath;
+        }
+      }
+
+      var indexOfRev = path.ids.map(function (x) { return x.id; })
         .indexOf(doc._rev.split('-')[1]) + 1;
       var howMany = path.ids.length - indexOfRev;
       path.ids.splice(indexOfRev, howMany);
@@ -4917,11 +4727,12 @@ AbstractPouchDB.prototype.changes = function (opts, callback) {
     callback = opts;
     opts = {};
   }
-  return new Changes(this, opts, callback);
+  return new Changes$1(this, opts, callback);
 };
 
 AbstractPouchDB.prototype.close = adapterFun('close', function (callback) {
   this._closed = true;
+  this.emit('closed');
   return this._close(callback);
 });
 
@@ -4978,6 +4789,9 @@ AbstractPouchDB.prototype.bulkDocs =
     if (doc._attachments) {
       Object.keys(doc._attachments).forEach(function (name) {
         attachmentError = attachmentError || attachmentNameError(name);
+        if (!doc._attachments[name].content_type) {
+          guardedConsole('warn', 'Attachment', name, 'on document', doc._id, 'is missing content_type');
+        }
       });
     }
   });
@@ -5126,26 +4940,24 @@ function parseAdapter(name, opts) {
   var match = name.match(/([a-z\-]*):\/\/(.*)/);
   if (match) {
     // the http adapter expects the fully qualified name
-    name = /http(s?)/.test(match[1]) ? match[1] + '://' + match[2] : match[2];
-    return {name: name, adapter: match[1]};
+    return {
+      name: /https?/.test(match[1]) ? match[1] + '://' + match[2] : match[2],
+      adapter: match[1]
+    };
   }
 
-  // check for browsers that have been upgraded from websql-only to websql+idb
-  var skipIdb = 'idb' in PouchDB.adapters && 'websql' in PouchDB.adapters &&
-    hasLocalStorage() &&
-    localStorage['_pouch__websqldb_' + PouchDB.prefix + name];
+  var adapters = PouchDB.adapters;
+  var preferredAdapters = PouchDB.preferredAdapters;
+  var prefix = PouchDB.prefix;
+  var adapterName = opts.adapter;
 
-  var adapterName;
-
-  if (opts.adapter) {
-    adapterName = opts.adapter;
-  } else if (typeof opts !== 'undefined' && opts.db) {
-    adapterName = 'leveldb';
-  } else { // automatically determine adapter
-    for (var i = 0; i < PouchDB.preferredAdapters.length; ++i) {
-      adapterName = PouchDB.preferredAdapters[i];
+  if (!adapterName) { // automatically determine adapter
+    for (var i = 0; i < preferredAdapters.length; ++i) {
+      adapterName = preferredAdapters[i];
+      // check for browsers that have been upgraded from websql-only to websql+idb
       /* istanbul ignore if */
-      if (skipIdb && adapterName === 'idb') {
+      if (adapterName === 'idb' && 'websql' in adapters &&
+          hasLocalStorage() && localStorage['_pouch__websqldb_' + prefix + name]) {
         // log it, because this can be confusing during development
         guardedConsole('log', 'PouchDB is downgrading "' + name + '" to WebSQL to' +
           ' avoid data loss, because it was already opened with WebSQL.');
@@ -5155,14 +4967,14 @@ function parseAdapter(name, opts) {
     }
   }
 
-  var adapter = PouchDB.adapters[adapterName];
+  var adapter = adapters[adapterName];
 
   // if adapter is invalid, then an error will be thrown later
   var usePrefix = (adapter && 'use_prefix' in adapter) ?
     adapter.use_prefix : true;
 
   return {
-    name: usePrefix ? (PouchDB.prefix + name) : name,
+    name: usePrefix ? (prefix + name) : name,
     adapter: adapterName
   };
 }
@@ -5182,15 +4994,23 @@ function prepareForDestruction(self) {
   var destructionListeners = self.constructor._destructionListeners;
 
   function onDestroyed() {
+    self.removeListener('closed', onClosed);
     self.constructor.emit('destroyed', self.name);
   }
 
   function onConstructorDestroyed() {
     self.removeListener('destroyed', onDestroyed);
-    self.emit('destroyed', self);
+    self.removeListener('closed', onClosed);
+    self.emit('destroyed');
+  }
+
+  function onClosed() {
+    self.removeListener('destroyed', onDestroyed);
+    destructionListeners["delete"](self.name);
   }
 
   self.once('destroyed', onDestroyed);
+  self.once('closed', onClosed);
 
   // in setup.js, the constructor is primed to listen for destroy events
   if (!destructionListeners.has(self.name)) {
@@ -5301,7 +5121,7 @@ PouchDB.plugin = function (obj) {
   if (typeof obj === 'function') { // function style for plugins
     obj(PouchDB);
   } else if (typeof obj !== 'object' || Object.keys(obj).length === 0){
-    throw new Error('Invalid plugin: object passed in is empty or not an object');
+    throw new Error('Invalid plugin: got \"' + obj + '\", expected an object or a function');
   } else {
     Object.keys(obj).forEach(function (id) { // object style for plugins
       PouchDB.prototype[id] = obj[id];
@@ -5324,7 +5144,7 @@ PouchDB.defaults = function (defaultOpts) {
       delete opts.name;
     }
 
-    opts = jsExtend.extend({}, defaultOpts, opts);
+    opts = extend$1({}, PouchAlt.__defaults, opts);
     PouchDB.call(this, name, opts);
   }
 
@@ -5337,11 +5157,15 @@ PouchDB.defaults = function (defaultOpts) {
     }
   });
 
+  // make default options transitive
+  // https://github.com/pouchdb/pouchdb/issues/5922
+  PouchAlt.__defaults = extend$1({}, this.__defaults, defaultOpts);
+
   return PouchAlt;
 };
 
 // managed automatically by set-version.js
-var version = "6.1.0-prerelease";
+var version = "6.1.0";
 
 PouchDB.version = version;
 
@@ -5977,29 +5801,16 @@ var LOCAL_STORE = 'local-store';
 // Where we detect blob support
 var DETECT_BLOB_SUPPORT_STORE = 'detect-blob-support';
 
-function slowJsonParse(str) {
+function safeJsonParse(str) {
+  // This try/catch guards against stack overflow errors.
+  // JSON.parse() is faster than vuvuzela.parse() but vuvuzela
+  // cannot overflow.
   try {
     return JSON.parse(str);
   } catch (e) {
     /* istanbul ignore next */
     return vuvuzela.parse(str);
   }
-}
-
-function safeJsonParse(str) {
-  // try/catch is deoptimized in V8, leading to slower
-  // times than we'd like to have. Most documents are _not_
-  // huge, and do not require a slower code path just to parse them.
-  // We can be pretty sure that a document under 50000 characters
-  // will not be so deeply nested as to throw a stack overflow error
-  // (depends on the engine and available memory, though, so this is
-  // just a hunch). 50000 was chosen based on the average length
-  // of this string in our test suite, to try to find a number that covers
-  // most of our test cases (26 over this size, 26378 under it).
-  if (str.length < 50000) {
-    return JSON.parse(str);
-  }
-  return slowJsonParse(str);
 }
 
 function safeJsonStringify(json) {
@@ -6009,37 +5820,6 @@ function safeJsonStringify(json) {
     /* istanbul ignore next */
     return vuvuzela.stringify(json);
   }
-}
-
-function tryCode(fun, that, args, PouchDB) {
-  try {
-    fun.apply(that, args);
-  } catch (err) {
-    // Shouldn't happen, but in some odd cases
-    // IndexedDB implementations might throw a sync
-    // error, in which case this will at least log it.
-    PouchDB.emit('error', err);
-  }
-}
-
-var taskQueue = {
-  running: false,
-  queue: []
-};
-
-function applyNext(PouchDB) {
-  if (taskQueue.running || !taskQueue.queue.length) {
-    return;
-  }
-  taskQueue.running = true;
-  var item = taskQueue.queue.shift();
-  item.action(function (err, res) {
-    tryCode(item.callback, this, [err, res], PouchDB);
-    taskQueue.running = false;
-    process.nextTick(function () {
-      applyNext(PouchDB);
-    });
-  });
 }
 
 function idbError(callback) {
@@ -6168,7 +5948,7 @@ function postProcessAttachments(results, asBlob) {
         var type = attObj.content_type;
         return new PouchPromise(function (resolve) {
           readBlobData(body, type, asBlob, function (data) {
-            row.doc._attachments[att] = jsExtend.extend(
+            row.doc._attachments[att] = extend$1(
               pick(attObj, ['digest', 'content_type']),
               {data: data}
             );
@@ -6469,7 +6249,7 @@ function idbBulkDocs(dbOpts, req, opts, api, idb, idbChanges, callback) {
 
       metadata.seq = e.target.result;
       // Current _rev is calculated from _rev_tree on read
-      delete metadata.rev;
+      // delete metadata.rev;
       var metadataToStore = encodeMetadata(metadata, winningRev,
         winningRevIsDeleted);
       var metaDataReq = docStore.put(metadataToStore);
@@ -6492,7 +6272,7 @@ function idbBulkDocs(dbOpts, req, opts, api, idb, idbChanges, callback) {
       results[resultsIdx] = {
         ok: true,
         id: metadata.id,
-        rev: winningRev
+        rev: metadata.rev
       };
       fetchedDocs.set(docInfo.metadata.id, docInfo.metadata);
       insertAttachmentMappings(docInfo, metadata.seq, callback);
@@ -6681,7 +6461,10 @@ function idbAllDocs(opts, api, idb, callback) {
       docIdRevIndex.get(key).onsuccess =  function onGetDoc(e) {
         row.doc = decodeDoc(e.target.result);
         if (opts.conflicts) {
-          row.doc._conflicts = collectConflicts(metadata);
+          var conflicts = collectConflicts(metadata);
+          if (conflicts.length) {
+            row.doc._conflicts = conflicts;
+          }
         }
         fetchAttachmentsIfNecessary(row.doc, opts, txn);
       };
@@ -6802,21 +6585,56 @@ function checkBlobSupport(txn) {
   });
 }
 
+// This task queue ensures that IDB open calls are done in their own tick
+// and sequentially - i.e. we wait for the async IDB open to *fully* complete
+// before calling the next one. This works around IE/Edge race conditions in IDB.
+
+var running = false;
+var queue = [];
+
+function tryCode(fun, err, res, PouchDB) {
+  try {
+    fun(err, res);
+  } catch (err) {
+    // Shouldn't happen, but in some odd cases
+    // IndexedDB implementations might throw a sync
+    // error, in which case this will at least log it.
+    PouchDB.emit('error', err);
+  }
+}
+
+function applyNext() {
+  if (running || !queue.length) {
+    return;
+  }
+  running = true;
+  queue.shift()();
+}
+
+function enqueueTask(action, callback, PouchDB) {
+  queue.push(function runAction() {
+    action(function runCallback(err, res) {
+      tryCode(callback, err, res, PouchDB);
+      running = false;
+      immediate(function runNext() {
+        applyNext(PouchDB);
+      });
+    });
+  });
+  applyNext();
+}
+
 var cachedDBs = new _Map();
 var blobSupportPromise;
-var idbChanges = new Changes$1();
+var idbChanges = new Changes();
 var openReqList = new _Map();
 
 function IdbPouch(opts, callback) {
   var api = this;
 
-  taskQueue.queue.push({
-    action: function (thisCallback) {
-      init(api, opts, thisCallback);
-    },
-    callback: callback
-  });
-  applyNext(api.constructor);
+  enqueueTask(function (thisCallback) {
+    init(api, opts, thisCallback);
+  }, callback, api.constructor);
 }
 
 function init(api, opts, callback) {
@@ -7089,13 +6907,20 @@ function init(api, opts, callback) {
         err = createError(MISSING_DOC, 'missing');
         return finish();
       }
-      if (isDeleted(metadata) && !opts.rev) {
-        err = createError(MISSING_DOC, "deleted");
-        return finish();
-      }
-      var objectStore = txn.objectStore(BY_SEQ_STORE);
 
-      var rev = opts.rev || metadata.winningRev;
+      var rev;
+      if(!opts.rev) {
+        rev = metadata.winningRev;
+        var deleted = isDeleted(metadata);
+        if (deleted) {
+          err = createError(MISSING_DOC, "deleted");
+          return finish();
+        }
+      } else {
+        rev = opts.latest ? latest(opts.rev, metadata) : opts.rev;
+      }
+
+      var objectStore = txn.objectStore(BY_SEQ_STORE);
       var key = metadata.id + '::' + rev;
 
       objectStore.index('_doc_id_rev').get(key).onsuccess = function (e) {
@@ -7572,10 +7397,9 @@ function init(api, opts, callback) {
   if (cached) {
     idb = cached.idb;
     api._meta = cached.global;
-    process.nextTick(function () {
+    return immediate(function () {
       callback(null, api);
     });
-    return;
   }
 
   var req;
@@ -8212,6 +8036,7 @@ function websqlBulkDocs(dbOpts, req, opts, api, db, websqlChanges, callback) {
       }
 
       docInfo.metadata.seq = seq;
+      var rev = docInfo.metadata.rev;
       delete docInfo.metadata.rev;
 
       var sql = isUpdate ?
@@ -8229,7 +8054,7 @@ function websqlBulkDocs(dbOpts, req, opts, api, db, websqlChanges, callback) {
         results[resultsIdx] = {
           ok: true,
           id: docInfo.metadata.id,
-          rev: winningRev
+          rev: rev
         };
         fetchedDocs.set(id, docInfo.metadata);
         callback();
@@ -8337,7 +8162,7 @@ function openDB$1(opts) {
   return cachedResult;
 }
 
-var websqlChanges = new Changes$1();
+var websqlChanges = new Changes();
 
 function fetchAttachmentsIfNecessary$1(doc, opts, api, txn, cb) {
   var attachments = Object.keys(doc._attachments || {});
@@ -8356,7 +8181,7 @@ function fetchAttachmentsIfNecessary$1(doc, opts, api, txn, cb) {
     var attObj = doc._attachments[att];
     var attOpts = {binary: opts.binary, ctx: txn};
     api._getAttachment(doc._id, att, attObj, attOpts, function (_, data) {
-      doc._attachments[att] = jsExtend.extend(
+      doc._attachments[att] = extend$1(
         pick(attObj, ['digest', 'content_type']),
         { data: data }
       );
@@ -8414,7 +8239,7 @@ function WebSqlPouch$1(opts, callback) {
 
   // extend the options here, because sqlite plugin has a ton of options
   // and they are constantly changing, so it's more prudent to allow anything
-  var websqlOpts = jsExtend.extend({}, opts, {
+  var websqlOpts = extend$1({}, opts, {
     version: POUCH_VERSION,
     description: opts.name,
     size: size
@@ -8839,48 +8664,75 @@ function WebSqlPouch$1(opts, callback) {
     websqlBulkDocs(opts, req, reqOpts, api, db, websqlChanges, callback);
   };
 
+  function latest$$(tx, id, rev, callback, finish) {
+    var sql = select(
+        SELECT_DOCS,
+        [DOC_STORE$1, BY_SEQ_STORE$1],
+        DOC_STORE_AND_BY_SEQ_JOINER,
+        DOC_STORE$1 + '.id=?');
+    var sqlArgs = [id];
+
+    tx.executeSql(sql, sqlArgs, function (a, results) {
+      if (!results.rows.length) {
+        var err = createError(MISSING_DOC, 'missing');
+        return finish(err);
+      }
+      var item = results.rows.item(0);
+      var metadata = safeJsonParse(item.metadata);
+      callback(latest(rev, metadata));
+    });
+  }
+
   api._get = function (id, opts, callback) {
     var doc;
     var metadata;
-    var err;
     var tx = opts.ctx;
     if (!tx) {
       return db.readTransaction(function (txn) {
-        api._get(id, jsExtend.extend({ctx: txn}, opts), callback);
+        api._get(id, extend$1({ctx: txn}, opts), callback);
       });
     }
 
-    function finish() {
+    function finish(err) {
       callback(err, {doc: doc, metadata: metadata, ctx: tx});
     }
 
     var sql;
     var sqlArgs;
-    if (opts.rev) {
-      sql = select(
-        SELECT_DOCS,
-        [DOC_STORE$1, BY_SEQ_STORE$1],
-        DOC_STORE$1 + '.id=' + BY_SEQ_STORE$1 + '.doc_id',
-        [BY_SEQ_STORE$1 + '.doc_id=?', BY_SEQ_STORE$1 + '.rev=?']);
-      sqlArgs = [id, opts.rev];
-    } else {
+
+    if(!opts.rev) {
       sql = select(
         SELECT_DOCS,
         [DOC_STORE$1, BY_SEQ_STORE$1],
         DOC_STORE_AND_BY_SEQ_JOINER,
         DOC_STORE$1 + '.id=?');
       sqlArgs = [id];
+    } else if (opts.latest) {
+      latest$$(tx, id, opts.rev, function (latestRev) {
+        opts.latest = false;
+        opts.rev = latestRev;
+        api._get(id, opts, callback);
+      }, finish);
+      return;
+    } else {
+      sql = select(
+        SELECT_DOCS,
+        [DOC_STORE$1, BY_SEQ_STORE$1],
+        DOC_STORE$1 + '.id=' + BY_SEQ_STORE$1 + '.doc_id',
+        [BY_SEQ_STORE$1 + '.doc_id=?', BY_SEQ_STORE$1 + '.rev=?']);
+      sqlArgs = [id, opts.rev];
     }
+
     tx.executeSql(sql, sqlArgs, function (a, results) {
       if (!results.rows.length) {
-        err = createError(MISSING_DOC, 'missing');
-        return finish();
+        var missingErr = createError(MISSING_DOC, 'missing');
+        return finish(missingErr);
       }
       var item = results.rows.item(0);
       metadata = safeJsonParse(item.metadata);
       if (item.deleted && !opts.rev) {
-        err = createError(MISSING_DOC, 'deleted');
-        return finish();
+        var deletedErr = createError(MISSING_DOC, 'deleted');
+        return finish(deletedErr);
       }
       doc = unstringifyDoc(item.data, metadata.id, item.rev);
       finish();
@@ -8984,7 +8836,10 @@ function WebSqlPouch$1(opts, callback) {
               doc.doc = data;
               doc.doc._rev = winningRev;
               if (opts.conflicts) {
-                doc.doc._conflicts = collectConflicts(metadata);
+                var conflicts = collectConflicts(metadata);
+                if (conflicts.length) {
+                  doc.doc._conflicts = conflicts;
+                }
               }
               fetchAttachmentsIfNecessary$1(doc.doc, opts, api, tx);
             }
@@ -9384,7 +9239,7 @@ function openDB(name, version, description, size) {
 }
 
 function WebSQLPouch(opts, callback) {
-  var _opts = jsExtend.extend({
+  var _opts = extend$1({
     websql: openDB
   }, opts);
 
@@ -9445,13 +9300,9 @@ function fetchRequest(options, callback) {
       'application/json');
   }
 
-  if (options.body && (options.body instanceof Blob)) {
-    readAsArrayBuffer(options.body, function (arrayBuffer) {
-      fetchOptions.body = arrayBuffer;
-    });
-  } else if (options.body &&
-             options.processData &&
-             typeof options.body !== 'string') {
+  if (options.body &&
+      options.processData &&
+      typeof options.body !== 'string') {
     fetchOptions.body = JSON.stringify(options.body);
   } else if ('body' in options) {
     fetchOptions.body = options.body;
@@ -9492,10 +9343,15 @@ function fetchRequest(options, callback) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       callback(null, response, result);
     } else {
-      callback(result, response);
+      result.status = response.statusCode;
+      callback(result);
     }
   })["catch"](function (error) {
-    callback(error, response);
+    if (!error) {
+      // this happens when the listener is canceled
+      error = new Error('canceled');
+    }
+    callback(error);
   });
 
   return {abort: wrappedPromise.reject};
@@ -9645,7 +9501,7 @@ function testXhr() {
 var hasXhr = testXhr();
 
 function ajax$1(options, callback) {
-  if (hasXhr || options.xhr) {
+  if (!false && (hasXhr || options.xhr)) {
     return xhRequest(options, callback);
   } else {
     return fetchRequest(options, callback);
@@ -9672,7 +9528,7 @@ function ajaxCore(options, callback) {
     cache: false
   };
 
-  options = jsExtend.extend(defaultOptions, options);
+  options = extend$1(defaultOptions, options);
 
   function onSuccess(obj, resp, cb) {
     if (!options.binary && options.json && typeof obj === 'string') {
@@ -9774,6 +9630,57 @@ function ajax(opts, callback) {
   }
 
   return ajaxCore(opts, callback);
+}
+
+// dead simple promise pool, inspired by https://github.com/timdp/es6-promise-pool
+// but much smaller in code size. limits the number of concurrent promises that are executed
+
+function pool(promiseFactories, limit) {
+  return new PouchPromise(function (resolve, reject) {
+    var running = 0;
+    var current = 0;
+    var done = 0;
+    var len = promiseFactories.length;
+    var err;
+
+    function runNext() {
+      running++;
+      promiseFactories[current++]().then(onSuccess, onError);
+    }
+
+    function doNext() {
+      if (++done === len) {
+        /* istanbul ignore if */
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      } else {
+        runNextBatch();
+      }
+    }
+
+    function onSuccess() {
+      running--;
+      doNext();
+    }
+
+    /* istanbul ignore next */
+    function onError(thisErr) {
+      running--;
+      err = err || thisErr;
+      doNext();
+    }
+
+    function runNextBatch() {
+      while (running < limit && current < len) {
+        runNext();
+      }
+    }
+
+    runNextBatch();
+  });
 }
 
 var CHANGES_BATCH_SIZE = 25;
@@ -9918,7 +9825,7 @@ function HttpPouch(opts, callback) {
 
   function ajax$$(userOpts, options, callback) {
     var reqAjax = userOpts.ajax || {};
-    var reqOpts = jsExtend.extend(clone(ajaxOpts), reqAjax, options);
+    var reqOpts = extend$1(clone(ajaxOpts), reqAjax, options);
     log$1(reqOpts.method + ' ' + reqOpts.url);
     return api._ajax(reqOpts, callback);
   }
@@ -9987,7 +9894,7 @@ function HttpPouch(opts, callback) {
     return setupPromise;
   }
 
-  setTimeout(function () {
+  immediate(function () {
     callback(null, api);
   });
 
@@ -10046,7 +9953,10 @@ function HttpPouch(opts, callback) {
         /* istanbul ignore next */
         params.attachments = true;
       }
-      ajax$$({}, {
+      if (opts.latest) {
+        params.latest = true;
+      }
+      ajax$$(opts, {
         url: genDBUrl(host, '_bulk_get' + paramsToStr(params)),
         method: 'POST',
         body: { docs: opts.docs}
@@ -10071,7 +9981,7 @@ function HttpPouch(opts, callback) {
       }
 
       for (var i = 0; i < numBatches; i++) {
-        var subOpts = pick(opts, ['revs', 'attachments']);
+        var subOpts = pick(opts, ['revs', 'attachments', 'latest']);
         subOpts.ajax = ajaxOpts;
         subOpts.docs = opts.docs.slice(i * batchSize,
           Math.min(opts.docs.length, (i + 1) * batchSize));
@@ -10155,6 +10065,10 @@ function HttpPouch(opts, callback) {
       params.revs_info = true;
     }
 
+    if (opts.latest) {
+      params.latest = true;
+    }
+
     if (opts.open_revs) {
       if (opts.open_revs !== "all") {
         opts.open_revs = JSON.stringify(opts.open_revs);
@@ -10188,13 +10102,7 @@ function HttpPouch(opts, callback) {
       // Sync Gateway would normally send it back as multipart/mixed,
       // which we cannot parse. Also, this is more efficient than
       // receiving attachments as base64-encoded strings.
-      function fetch() {
-
-        if (!filenames.length) {
-          return null;
-        }
-
-        var filename = filenames.pop();
+      function fetch(filename) {
         var att = atts[filename];
         var path = encodeDocId(doc._id) + '/' + encodeAttachmentId(filename) +
           '?rev=' + doc._rev;
@@ -10216,9 +10124,15 @@ function HttpPouch(opts, callback) {
         });
       }
 
+      var promiseFactories = filenames.map(function (filename) {
+        return function () {
+          return fetch(filename);
+        };
+      });
+
       // This limits the number of parallel xhr requests to 5 any time
       // to avoid issues with maximum browser request limits
-      return new PromisePool(fetch, 5, {promise: PouchPromise}).start();
+      return pool(promiseFactories, 5);
     }
 
     function fetchAllAttachments(docOrDocs) {
@@ -10682,7 +10596,7 @@ function HttpPouch(opts, callback) {
 
       if ((opts.continuous && !(limit && leftToFetch <= 0)) || !finished) {
         // Queue a call to fetch again with the newest sequence number
-        setTimeout(function () { fetch(lastFetchedSeq, fetched); }, 0);
+        immediate(function () { fetch(lastFetchedSeq, fetched); });
       } else {
         // We're done, call the callback
         opts.complete(null, results);
@@ -11313,11 +11227,11 @@ function evalFunctionWithEval(func, emit) {
 var promisedCallback = function (promise, callback) {
   if (callback) {
     promise.then(function (res) {
-      process.nextTick(function () {
+      immediate(function () {
         callback(null, res);
       });
     }, function (reason) {
-      process.nextTick(function () {
+      immediate(function () {
         callback(reason);
       });
     });
@@ -12224,7 +12138,7 @@ function queryPromised(db, fun, opts) {
       return createView(createViewOpts).then(function (view) {
         if (opts.stale === 'ok' || opts.stale === 'update_after') {
           if (opts.stale === 'update_after') {
-            process.nextTick(function () {
+            immediate(function () {
               updateView(view);
             });
           }
@@ -12321,7 +12235,8 @@ function createBulkGetOpts(diffs) {
 
   return {
     docs: requests,
-    revs: true
+    revs: true,
+    latest: true
   };
 }
 
@@ -12388,21 +12303,32 @@ function getDocs(src, target, diffs, state) {
     return doc._attachments && Object.keys(doc._attachments).length > 0;
   }
 
+  function hasConflicts(doc) {
+    return doc._conflicts && doc._conflicts.length > 0;
+  }
+
   function fetchRevisionOneDocs(ids) {
     // Optimization: fetch gen-1 docs and attachments in
     // a single request using _all_docs
     return src.allDocs({
       keys: ids,
-      include_docs: true
+      include_docs: true,
+      conflicts: true
     }).then(function (res) {
       if (state.cancelled) {
         throw new Error('cancelled');
       }
       res.rows.forEach(function (row) {
         if (row.deleted || !row.doc || !isGenOne$1(row.value.rev) ||
-            hasAttachments(row.doc)) {
+            hasAttachments(row.doc) || hasConflicts(row.doc)) {
           // if any of these conditions apply, we need to fetch using get()
           return;
+        }
+
+        // strip _conflicts array to appease CSG (#5793)
+        /* istanbul ignore if */
+        if (row.doc._conflicts) {
+          delete row.doc._conflicts;
         }
 
         // the doc we got back from allDocs() is sufficient
@@ -13300,8 +13226,8 @@ function Sync(src, target, opts, callback) {
   var self = this;
   this.canceled = false;
 
-  var optsPush = opts.push ? jsExtend.extend({}, opts, opts.push) : opts;
-  var optsPull = opts.pull ? jsExtend.extend({}, opts, opts.pull) : opts;
+  var optsPush = opts.push ? extend$1({}, opts, opts.push) : opts;
+  var optsPull = opts.pull ? extend$1({}, opts, opts.pull) : opts;
 
   this.push = replicate(src, target, optsPush);
   this.pull = replicate(target, src, optsPull);
@@ -13397,19 +13323,25 @@ function Sync(src, target, opts, callback) {
     this.pull.on('complete', self.push.cancel.bind(self.push));
   }
 
+  function addOneListener(ee, event, listener) {
+    if (ee.listeners(event).indexOf(listener) == -1) {
+      ee.on(event, listener);
+    }
+  }
+
   this.on('newListener', function (event) {
     if (event === 'change') {
-      self.pull.on('change', pullChange);
-      self.push.on('change', pushChange);
+      addOneListener(self.pull, 'change', pullChange);
+      addOneListener(self.push, 'change', pushChange);
     } else if (event === 'denied') {
-      self.pull.on('denied', pullDenied);
-      self.push.on('denied', pushDenied);
+      addOneListener(self.pull, 'denied', pullDenied);
+      addOneListener(self.push, 'denied', pushDenied);
     } else if (event === 'active') {
-      self.pull.on('active', pullActive);
-      self.push.on('active', pushActive);
+      addOneListener(self.pull, 'active', pullActive);
+      addOneListener(self.push, 'active', pushActive);
     } else if (event === 'paused') {
-      self.pull.on('paused', pullPaused);
-      self.push.on('paused', pushPaused);
+      addOneListener(self.pull, 'paused', pullPaused);
+      addOneListener(self.push, 'paused', pushPaused);
     }
   });
 
@@ -13516,8 +13448,6 @@ PouchDB.plugin(IDBPouch)
 // aggressive bundle.
 
 module.exports = PouchDB;
-}).call(this,_dereq_(11),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"1":1,"11":11,"12":12,"13":13,"14":14,"2":2,"4":4,"5":5,"7":7,"8":8,"9":9}]},{},[15])(15)
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"1":1,"10":10,"11":11,"12":12,"2":2,"4":4,"5":5,"6":6,"7":7}]},{},[13])(13)
 });
-var __end = performance.now();
-__onDone(__end - __start);

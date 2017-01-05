@@ -1,4 +1,3 @@
-var __start = performance.now();
  /**
  *  Copyright (c) 2014-2015, Facebook, Inc.
  *  All rights reserved.
@@ -4978,5 +4977,3 @@ var __start = performance.now();
   return Immutable;
 
 }));
-var __end = performance.now();
-__onDone(__end - __start);

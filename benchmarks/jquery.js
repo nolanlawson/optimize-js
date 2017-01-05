@@ -1,4 +1,3 @@
-var __start = performance.now();
 /*eslint-disable no-unused-vars*/
 /*!
  * jQuery JavaScript Library v3.1.0
@@ -10073,5 +10072,3 @@ if ( !noGlobal ) {
 
 return jQuery;
 } );
-var __end = performance.now();
-__onDone(__end - __start);

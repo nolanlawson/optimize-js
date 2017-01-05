@@ -3,6 +3,8 @@ optimize-js [![Build Status](https://travis-ci.org/nolanlawson/optimize-js.svg?b
 
 Optimize a JavaScript file for faster initial execution and parsing, by wrapping all immediately-invoked functions or likely-to-be-invoked functions in parentheses.
 
+See the [changelog](#changelog) for recent changes.
+
 Install
 ---
 
@@ -32,14 +34,14 @@ runIt((function (){}))
 Benchmark overview
 ----
 
-| Browser | Typical speed boost using `optimize-js` |
+| Browser | Typical speed boost/regression using optimize-js |
 | ---- | ----- |
-| Chrome 52 | 57.09% |
-| Edge 14 | 28.88% |
-| Firefox 48 | 12.49% |
-| Safari 10 | 6.54% |
+| Chrome 55 | 20.63% |
+| Edge 14 | 13.52% |
+| Firefox 50 | 8.26% |
+| Safari 10 | -1.04% |
 
-For benchmark details, see [benchmarks](#benchmarks).
+These numbers are based on a benchmark of common JS libraries. For benchmark details, see [benchmarks](#benchmarks).
 
 CLI
 ----
@@ -130,20 +132,20 @@ In all such cases, `optimize-js` wraps the function in parentheses.
 Yes, `optimize-js` might add as many as two bytes (horror!) per function, which amounts to practically nil once you
 take gzip into account. To prove it, here are the gzipped sizes for the libraries I use in the benchmark:
 
-| Script | Size (bytes) | Difference (bytes)
+| Script | Size (bytes) | Difference (bytes) |
 | ---- | --- | --- |
-| benchmarks/ember.min.js | 126957 | |
-| benchmarks/ember.min.optimized.js | 127134 | +177 |
-| benchmarks/immutable.min.js | 15782 | |
-| benchmarks/immutable.min.optimized.js | 15809 | +27 |
-| benchmarks/jquery.min.js | 30450 | |
-| benchmarks/jquery.min.optimized.js | 30524 | +74 |
-| benchmarks/lodash.min.js | 24528 | |
-| benchmarks/lodash.min.optimized.js | 24577 | +49 |
-| benchmarks/pouchdb.min.js | 45298 | |
-| benchmarks/pouchdb.min.optimized.js | 45426 | +128 |
-| benchmarks/three.min.js | 125070 | |
-| benchmarks/three.min.optimized.js | 125129 | +59 |
+| benchmarks/create-react-app.min.js | 160387 ||
+| benchmarks/create-react-app.min.optimized.js | 160824 |+ 437 |
+| benchmarks/immutable.min.js | 56738 ||
+| benchmarks/immutable.min.optimized.js | 56933 |+ 195 |
+| benchmarks/jquery.min.js | 86808 ||
+| benchmarks/jquery.min.optimized.js | 87109 |+ 301 |
+| benchmarks/lodash.min.js | 71381 ||
+| benchmarks/lodash.min.optimized.js | 71644 |+ 263 |
+| benchmarks/pouchdb.min.js | 140332 ||
+| benchmarks/pouchdb.min.optimized.js | 141231 |+ 899 |
+| benchmarks/three.min.js | 486996 ||
+| benchmarks/three.min.optimized.js | 487279 |+ 283 |
 
 ### Is `optimize-js` intended for library authors?
 
@@ -152,12 +154,23 @@ Sure! If you are already shipping a bundled, minified version of your library, t
 Also note that because `optimize-js` optimizes for some patterns that are based on heuristics rather than _known_ eagerly-invoked
 functions, it may actually hurt your performance in some cases. (See benchmarks below for examples.) Be sure to check that `optimize-js` is a help rather than a hindrance for your particular codebase, using something like:
 
-```js
+```html
+<script>
 var start = performance.now();
-// your code goes here...
+</script>
+<script src="myscript.js"></script>
+<script>
 var end = performance.now();
 console.log('took ' + (end - start) + 'ms');
+</script>
 ```
+
+Note that the script boundaries are actually recommended, in order to truly measure the full parse/compile time.
+If you'd like to avoid measuring the network overhead, you can see how we do it in [our benchmarks](https://github.com/nolanlawson/optimize-js/tree/master/benchmarks).
+
+You may also want to check out [marky](http://github.com/nolanlawson/marky),
+which allows you to easily set mark/measure points that you can visually inspect in the Dev Tools timeline to ensure that the full
+compile time is being measured.
 
 Also, be sure to test in multiple browsers! If you need an Edge VM, check out [edge.ms](http://edge.ms).
 
@@ -173,7 +186,7 @@ guesses), it can be more judicious in applying the paren hack.
 
 ### Does this really work for every JavaScript engine?
 
-Based on my tests, this optimization seems to work best for V8 (Chrome), followed by Chakra (Edge), followed by SpiderMonkey (Firefox). For JavaScriptCore (Safari) it seems to be basically a wash, although it's hard to tell because JSCore is so fast already that the numbers are tiny.
+Based on my tests, this optimization seems to work best for V8 (Chrome), followed by Chakra (Edge), followed by SpiderMonkey (Firefox). For JavaScriptCore (Safari) it seems to be basically a wash, and may actually be a slight regression overall depending on your codebase. (Again, this is why it's important to actually measure on your own codebase, on the browsers you actually target!)
 
 In the case of Chakra, [Uglify-style IIFEs are actually already optimized](https://github.com/mishoo/UglifyJS2/issues/640#issuecomment-247792319), but using `optimize-js` doesn't hurt because a
 function preceded by `'('` still goes into the fast path.
@@ -183,61 +196,57 @@ Benchmarks
 
 These tests were run using a handful of popular libraries, wrapped in `performance.now()` measurements. Each test reported the median of 251 runs. `optimize-js` commit [da51013](https://github.com/nolanlawson/optimize-js/commit/da51013) was tested. Minification was applied using `uglifyjs -mc`, Uglify 2.7.0.
 
-You can also try [a live version of the benchmark](https://nolanlawson.github.io/optimize-js/) (note: very slow, running locally is recommended).
+You can also try [a live version of the benchmark](https://nolanlawson.github.io/optimize-js/).
 
-### Chrome 52, macOS Sierra, 2013 MacBook Pro i5
+### Chrome 55, Windows 10 RS1, Surfacebook i5
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| ImmutableJS | 12.76ms | 1.75ms | **86.29%** | 10.47ms | 1.68ms | **83.95%** |
-| jQuery | 26.73ms | 8.72ms | **67.38%** | 23.02ms | 9ms | **60.90%** |
-| Lodash | 29.13ms | 28.03ms | **3.78%** | 20.7ms | 24.45ms | **-18.12%** |
-| Ember | 1.48ms | 1.33ms | **10.14%** | 70.93ms | 1.24ms | **98.25%** |
-| PouchDB | 60.98ms | 31.59ms | **48.20%** | 40.63ms | 32.02ms | **21.19%** |
-| ThreeJS | 10.6ms | 10.16ms | **4.15%** | 66.18ms | 10.33ms | **84.39%** |
-
-Overall improvement: **57.09%**
+| Create React App | 55.39ms | 51.71ms | **6.64%** | 26.12ms | 21.09ms | **19.26%** |
+| ImmutableJS | 11.61ms | 7.95ms | **31.50%** | 8.50ms | 5.99ms | **29.55%** |
+| jQuery | 22.51ms | 16.62ms | **26.18%** | 19.35ms | 16.10ms | **16.80%** |
+| Lodash | 20.88ms | 19.30ms | **7.57%** | 20.47ms | 19.86ms | **3.00%** |
+| PouchDB | 43.75ms | 20.36ms | **53.45%** | 36.40ms | 18.78ms | **48.43%** |
+| ThreeJS | 71.04ms | 72.98ms | **-2.73%** | 54.99ms | 39.59ms | **28.00%** |
+Overall improvement: **20.63%**
 
 ### Edge 14, Windows 10 RS1, SurfaceBook i5
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| ImmutableJS | 5.11ms | 1ms | **80.43%** | 4.61ms | 1ms | **78.31%** |
-| jQuery | 21.62ms | 12.31ms | **43.06%** | 21.27ms | 12.69ms | **40.34%** |
-| Lodash | 22.1ms | 21.81ms | **1.31%** | 19.97ms | 19.05ms | **4.61%** |
-| Ember | 0.33ms | 0.32ms | **3.03%** | 0.33ms | 0.32ms | **3.03%** |
-| PouchDB | 37.54ms | 28.44ms | **24.24%** | 47.81ms | 65.23ms | **-36.44%** |
-| ThreeJS | 30.9ms | 19.08ms | **38.25%** | 68.94ms | 18.26ms | **73.51%** |
+| Create React App | 32.46ms | 24.85ms | **23.44%** | 26.49ms | 20.39ms | **23.03%** |
+| ImmutableJS | 8.94ms | 6.19ms | **30.74%** | 7.79ms | 5.41ms | **30.55%** |
+| jQuery | 22.56ms | 14.45ms | **35.94%** | 16.62ms | 12.99ms | **21.81%** |
+| Lodash | 22.16ms | 21.48ms | **3.05%** | 15.77ms | 15.46ms | **1.96%** |
+| PouchDB | 24.07ms | 21.22ms | **11.84%** | 39.76ms | 52.86ms | **-32.98%** |
+| ThreeJS | 43.77ms | 39.99ms | **8.65%** | 54.00ms | 36.57ms | **32.28%** |
+Overall improvement: **13.52%**
 
-Overall improvement: **28.88%**
-
-### Firefox 48, macOS Sierra, 2013 MacBook Pro i5
+### Firefox 50, Windows 10 RS1, Surfacebook i5
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| ImmutableJS | 4.92ms | 1.74ms | **64.63%** | 2.87ms | 1.31ms | **54.36%** |
-| jQuery | 15.73ms | 12.64ms | **19.64%** | 14.88ms | 12.43ms | **16.47%** |
-| Lodash | 13.8ms | 14.6ms | **-5.80%** | 9.27ms | 9.33ms | **-0.65%** |
-| Ember | 3.22ms | 5.55ms | **-72.36%** | 9.42ms | 5.27ms | **44.06%** |
-| PouchDB | 15.05ms | 16.65ms | **-10.63%** | 11.96ms | 11.6ms | **3.01%** |
-| ThreeJS | 21.09ms | 17.63ms | **16.41%** | 26.83ms | 21.68ms | **19.19%** |
-
-Overall improvement: **12.49%**
+| Create React App | 33.56ms | 28.02ms | **16.50%** | 24.71ms | 22.05ms | **10.76%** |
+| ImmutableJS | 6.52ms | 5.75ms | **11.80%** | 4.96ms | 4.58ms | **7.47%** |
+| jQuery | 15.77ms | 13.97ms | **11.41%** | 12.90ms | 12.15ms | **5.85%** |
+| Lodash | 17.08ms | 16.63ms | **2.64%** | 13.11ms | 13.22ms | **-0.80%** |
+| PouchDB | 19.23ms | 16.77ms | **12.82%** | 13.77ms | 12.89ms | **6.42%** |
+| ThreeJS | 38.33ms | 37.36ms | **2.53%** | 33.01ms | 30.32ms | **8.16%** |
+Overall improvement: **8.26%**
 
 ### Safari 10, macOS Sierra, 2013 MacBook Pro i5
 
 | Script | Original | Optimized | Improvement | Minified | Min+Optimized | Improvement |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| ImmutableJS | 1.23ms | 1.39ms | **-13.01%** | 1.22ms | 1.12ms | **8.20%** |
-| jQuery | 4.16ms | 3.91ms | **6.01%** | 3.83ms | 3.94ms | **-2.87%** |
-| Lodash | 3.95ms | 3.9ms | **1.27%** | 3.38ms | 3.36ms | **0.59%** |
-| Ember | 0.55ms | 0.5ms | **9.09%** | 0.44ms | 0.4ms | **9.09%** |
-| PouchDB | 2.31ms | 2.15ms | **6.93%** | 2.32ms | 2.21ms | **4.74%** |
-| ThreeJS | 8.51ms | 7.62ms | **10.46%** | 8.03ms | 6.82ms | **15.07%** |
+| Create React App | 31.60ms | 31.60ms | **0.00%** | 23.10ms | 23.50ms | **-1.73%** |
+| ImmutableJS | 5.70ms | 5.60ms | **1.75%** | 4.50ms | 4.50ms | **0.00%** |
+| jQuery | 12.40ms | 12.60ms | **-1.61%** | 10.80ms | 10.90ms | **-0.93%** |
+| Lodash | 14.70ms | 14.50ms | **1.36%** | 11.10ms | 11.30ms | **-1.80%** |
+| PouchDB | 14.00ms | 14.20ms | **-1.43%** | 11.70ms | 12.10ms | **-3.42%** |
+| ThreeJS | 35.60ms | 36.30ms | **-1.97%** | 27.50ms | 27.70ms | **-0.73%** |
+Overall improvement: **-1.04%**
 
-Overall improvement: **6.54%**
-
-Note that these results may vary based on your machine, how taxed your CPU is, gremlins, etc. I ran the full suite a few times on all browsers and found these numbers to be roughly representative. However, the final "overall improvement" may vary by as much as 5%, and individual libraries can swing a bit too.
+Note that these results may vary based on your machine, how taxed your CPU is, gremlins, etc. I ran the full suite a few times on all browsers and found these numbers to be roughly representative. In our test suite, we use a median of 151 runs to reduce variability.
 
 Plugins
 ---
@@ -257,6 +266,9 @@ Thanks
 ----
 
 Thanks to [@krisselden](https://github.com/krisselden), [@bmaurer](https://github.com/bmaurer), and [@pleath](https://github.com/pleath) for explaining these concepts in the various GitHub issues. Thanks also to [astexplorer](https://github.com/fkling/astexplorer), [acorn](https://github.com/ternjs/acorn), and [magic-string](https://www.npmjs.com/package/magic-string) for making the implementation so easy.
+
+Thanks to [Sasha Aickin](https://github.com/aickin) for generous contributions to improving this library (especially in v1.0.3)
+and prodding me to improve the accuracy of the benchmarks.
 
 Contributing
 -----
@@ -279,3 +291,17 @@ Test code coverage:
 ```bash
 npm run coverage
 ```
+
+Changelog
+----
+
+- v1.0.3
+  - Much more accurate benchmark (#37)
+  - Browserify-specific fixes (#29, #36, #39)
+  - Webpack-specific fixes (#7, #34)
+- v1.0.2
+  - Use estree-walker to properly parse ES6 (#31)
+- v1.0.1:
+  - Don't call process.exit(0) on success (#11)
+- v1.0.0
+  - Initial release
