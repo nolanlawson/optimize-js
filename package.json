@@ -1,6 +1,6 @@
 {
   "name": "optimize-js",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Optimize initial JavaScript execution/parsing by wrapping eager functions",
   "main": "lib/index.js",
   "scripts": {
