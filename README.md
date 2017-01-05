@@ -166,7 +166,7 @@ console.log('took ' + (end - start) + 'ms');
 ```
 
 Note that the script boundaries are actually recommended, in order to truly measure the full parse/compile time.
-If you'd like to avoid measuring the network overhead, you can see how we do it in [our benchmarks](https://github.com/nolanlawson/optimize-js/tree/master/benchmarks).
+If you'd like to avoid measuring the network overhead, you can see how we do it in [our benchmarks](https://github.com/nolanlawson/optimize-js/blob/bbac7678656c85a1e4b98cf22ea4d5342965b2fd/benchmarks/index.html#L111-L126).
 
 You may also want to check out [marky](http://github.com/nolanlawson/marky),
 which allows you to easily set mark/measure points that you can visually inspect in the Dev Tools timeline to ensure that the full
