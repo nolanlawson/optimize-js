@@ -296,12 +296,12 @@ Changelog
 ----
 
 - v1.0.3
-  - Much more accurate benchmark (#37)
-  - Browserify-specific fixes (#29, #36, #39)
-  - Webpack-specific fixes (#7, #34)
+  - Much more accurate benchmark ([#37](https://github.com/nolanlawson/optimize-js/issues/37))
+  - Browserify-specific fixes ([#29](https://github.com/nolanlawson/optimize-js/issues/29), [#36](https://github.com/nolanlawson/optimize-js/issues/36), [#39](https://github.com/nolanlawson/optimize-js/issues/39))
+  - Webpack-specific fixes ([#7](https://github.com/nolanlawson/optimize-js/issues/7), [#34](https://github.com/nolanlawson/optimize-js/issues/34))
 - v1.0.2
-  - Use estree-walker to properly parse ES6 (#31)
+  - Use estree-walker to properly parse ES6 ([#31](https://github.com/nolanlawson/optimize-js/issues/31))
 - v1.0.1:
-  - Don't call process.exit(0) on success (#11)
+  - Don't call process.exit(0) on success ([#11](https://github.com/nolanlawson/optimize-js/issues/11))
 - v1.0.0
   - Initial release
