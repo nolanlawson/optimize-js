@@ -43,6 +43,8 @@ Benchmark overview
 
 These numbers are based on a benchmark of common JS libraries. For benchmark details, see [benchmarks](#benchmarks).
 
+To test on your own JavaScript bundle, check out [test-optimize-js](https://nolanlawson.github.io/test-optimize-js/).
+
 CLI
 ----
 
