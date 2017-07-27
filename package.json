@@ -22,6 +22,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "acorn": "^3.3.0",
+    "acorn-es7-plugin": "^1.1.7",
     "concat-stream": "^1.5.1",
     "estree-walker": "^0.3.0",
     "magic-string": "^0.16.0",
