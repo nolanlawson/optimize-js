@@ -3,7 +3,7 @@ optimize-js [![Build Status](https://travis-ci.org/nolanlawson/optimize-js.svg?b
 
 Optimize a JavaScript file for faster initial execution and parsing, by wrapping all immediately-invoked functions or likely-to-be-invoked functions in parentheses.
 
-See the [changelog](#changelog) for recent changes.
+_**⚠️ Maintenance note ⚠️** This project is unmaintained. I consider it an interesting experiment, but I have no intention to keep updating the benchmark results with every new browser release, or to add new features. I invite folks to keep using it, but to be aware that they should heavily benchmark their own websites to ensure it's actually a significant performance improvement in their target browsers._
 
 Install
 ---
