@@ -5,6 +5,8 @@ Optimize a JavaScript file for faster initial execution and parsing, by wrapping
 
 _**⚠️ Maintenance note ⚠️** This project is unmaintained. I consider it an interesting experiment, but I have no intention to keep updating the benchmark results with every new browser release, or to add new features. I invite folks to keep using it, but to be aware that they should heavily benchmark their own websites to ensure it's actually a significant performance improvement in their target browsers._
 
+_**Update** The V8 team wrote [a blog post](https://v8.dev/blog/preparser#pife) about why you probably shouldn't use optimize-js anymore._
+
 Install
 ---
 
