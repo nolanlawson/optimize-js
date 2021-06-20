@@ -83,7 +83,7 @@ var output = optimizeJs(input, {
 Why?
 ----
 
-Modern JavaScript engines like V8, Chakra, and SpiderMonkey have a heuristic where they pre-parse most 
+Modern JavaScript engines like V8, Chakra, and SpiderMonkey have a heuristic where they pre-parse most
 functions before doing a full parse.
 The pre-parse step merely checks for syntax errors while avoiding the cost of a full parse.
 
@@ -105,7 +105,7 @@ where they try to detect such IIFEs and skip the pre-parse step. Hooray!
 
 The bad news, though, is that these heuristics don't always work,
 because they're based on a greedy method of checking for a `'('` token immediately to the left of the function. (The parser
-avoids anything more intricate because it would amount to parsing the whole thing, negating the benefit of the pre-parse). 
+avoids anything more intricate because it would amount to parsing the whole thing, negating the benefit of the pre-parse).
 In cases without the paren (which include
 common module formats like UMD/Browserify/Webpack/etc.), the browser will actually parse the function _twice_, first as a pre-parse and second
 as a full parse. This means that the JavaScript code runs much more slowly overall, because more time is spent parsing than needs to be. See ["The cost of small modules"](https://nolanlawson.com/2016/08/15/the-cost-of-small-modules/) for an idea of how bad this can get.
@@ -127,7 +127,7 @@ The current implementation is to parse to a syntax tree and check for functions 
 2. Are passed in directly as arguments to another function
 
 The first method is an easy win – those functions are immediately executed. The second method is more of a heuristic, but tends
-to be a safe bet given common patterns like Node-style errbacks, Promise chains, and UMD/Browserify/Webpack module declarations. 
+to be a safe bet given common patterns like Node-style errbacks, Promise chains, and UMD/Browserify/Webpack module declarations.
 
 In all such cases, `optimize-js` wraps the function in parentheses.
 
@@ -184,7 +184,7 @@ Possibly! This is a free and open-source library, so I encourage anybody to borr
 
 ### Why not paren-wrap every single function?
 
-As described above, the pre-parsing optimization in browsers is a very good idea for the vast majority of the web, where most functions 
+As described above, the pre-parsing optimization in browsers is a very good idea for the vast majority of the web, where most functions
 aren't immediately executed. However, since `optimize-js` knows when your functions are immediately executed (or can make reasonable
 guesses), it can be more judicious in applying the paren hack.
 
@@ -258,6 +258,7 @@ Plugins
 * [Grunt plugin for optimize-js](https://github.com/sergejmueller/grunt-optimize-js)
 * [Gulp plugin for optimize-js](https://github.com/prateekbh/gulp-optimize-js)
 * [Webpack plugin for optimize-js](https://github.com/vigneshshanmugam/optimize-js-plugin)
+* [Rollup plugin for optimize-js](https://github.com/ezekielchentnik/rollup-plugin-optimize-js)
 
 See also
 ---
